@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IPAddress.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Filium</a> &gt; <a href="index.source.html" class="el_package">com.filium.model.network</a> &gt; <span class="el_source">IPAddress.java</span></div><h1>IPAddress.java</h1><pre class="source lang-java linenums">package com.filium.model.network;
+
+import java.util.Objects;
+
+/**
+ * Immutable value class representing an IPv4 address.
+ * Validates format on construction. All instances are guaranteed
+ * to hold a well-formed dotted-decimal IPv4 address.
+ */
+public final class IPAddress {
+
+    /** Broadcast address constant: 255.255.255.255 */
+<span class="fc" id="L13">    public static final IPAddress BROADCAST = new IPAddress(&quot;255.255.255.255&quot;);</span>
+
+    /** Loopback address constant: 127.0.0.1 */
+<span class="fc" id="L16">    public static final IPAddress LOOPBACK = new IPAddress(&quot;127.0.0.1&quot;);</span>
+
+    private final String address;
+    private final int[] octets;
+
+    /**
+     * Constructs a new IPAddress from a dotted-decimal string.
+     *
+     * @param address the dotted-decimal IPv4 string (e.g. &quot;192.168.1.1&quot;)
+     * @throws IllegalArgumentException if the format is invalid
+     */
+<span class="fc" id="L27">    public IPAddress(String address) {</span>
+<span class="fc bfc" id="L28" title="All 2 branches covered.">        if (address == null) {</span>
+<span class="fc" id="L29">            throw new IllegalArgumentException(&quot;IP address must not be null&quot;);</span>
+        }
+<span class="fc" id="L31">        this.octets = parse(address.trim());</span>
+<span class="fc" id="L32">        this.address = address.trim();</span>
+<span class="fc" id="L33">    }</span>
+
+    /**
+     * Parses a dotted-decimal string into 4 octet integers.
+     * Throws IllegalArgumentException on any format violation.
+     */
+    private static int[] parse(String address) {
+<span class="fc" id="L40">        String[] parts = address.split(&quot;\\.&quot;, -1);</span>
+
+<span class="fc bfc" id="L42" title="All 2 branches covered.">        if (parts.length != 4) {</span>
+<span class="fc" id="L43">            throw new IllegalArgumentException(</span>
+                &quot;Invalid IP address format: '&quot; + address + &quot;'. Expected 4 octets.&quot;);
+        }
+
+<span class="fc" id="L47">        int[] octets = new int[4];</span>
+<span class="fc bfc" id="L48" title="All 2 branches covered.">        for (int i = 0; i &lt; 4; i++) {</span>
+<span class="fc" id="L49">            String part = parts[i];</span>
+<span class="fc bfc" id="L50" title="All 2 branches covered.">            if (part.isEmpty()) {</span>
+<span class="fc" id="L51">                throw new IllegalArgumentException(</span>
+                    &quot;Invalid IP address format: '&quot; + address + &quot;'. Empty octet at position &quot; + i + &quot;.&quot;);
+            }
+            try {
+<span class="fc" id="L55">                octets[i] = Integer.parseInt(part);</span>
+<span class="fc" id="L56">            } catch (NumberFormatException e) {</span>
+<span class="fc" id="L57">                throw new IllegalArgumentException(</span>
+                    &quot;Invalid IP address format: '&quot; + address + &quot;'. Non-numeric octet '&quot; + part + &quot;'.&quot;);
+<span class="fc" id="L59">            }</span>
+<span class="fc bfc" id="L60" title="All 4 branches covered.">            if (octets[i] &lt; 0 || octets[i] &gt; 255) {</span>
+<span class="fc" id="L61">                throw new IllegalArgumentException(</span>
+                    &quot;Invalid IP address format: '&quot; + address + &quot;'. Octet value &quot; + octets[i] + &quot; out of range 0-255.&quot;);
+            }
+        }
+<span class="fc" id="L65">        return octets;</span>
+    }
+
+    /**
+     * Returns the IP address as a dotted-decimal string.
+     *
+     * @return dotted-decimal string, e.g. &quot;192.168.1.1&quot;
+     */
+    public String getAddress() {
+<span class="fc" id="L74">        return address;</span>
+    }
+
+    /**
+     * Returns a copy of the 4 octet integer values.
+     *
+     * @return int array of length 4, each value 0-255
+     */
+    public int[] getOctets() {
+<span class="fc" id="L83">        return octets.clone();</span>
+    }
+
+    /**
+     * Determines whether this IP address falls within the given network/mask.
+     *
+     * @param network the network address (e.g. &quot;192.168.1.0&quot;)
+     * @param mask    the subnet mask in dotted-decimal (e.g. &quot;255.255.255.0&quot;)
+     * @return true if this address is within the specified subnet
+     * @throws IllegalArgumentException if network or mask is invalid
+     */
+    public boolean isInSubnet(IPAddress network, String mask) {
+<span class="fc bfc" id="L95" title="All 2 branches covered.">        if (network == null) {</span>
+<span class="fc" id="L96">            throw new IllegalArgumentException(&quot;Network address must not be null&quot;);</span>
+        }
+<span class="fc bfc" id="L98" title="All 2 branches covered.">        if (mask == null) {</span>
+<span class="fc" id="L99">            throw new IllegalArgumentException(&quot;Subnet mask must not be null&quot;);</span>
+        }
+
+<span class="fc" id="L102">        int[] maskOctets = parse(mask);</span>
+<span class="fc" id="L103">        int[] networkOctets = network.getOctets();</span>
+<span class="fc" id="L104">        int[] thisOctets = this.octets;</span>
+
+<span class="fc bfc" id="L106" title="All 2 branches covered.">        for (int i = 0; i &lt; 4; i++) {</span>
+<span class="fc bfc" id="L107" title="All 2 branches covered.">            if ((thisOctets[i] &amp; maskOctets[i]) != (networkOctets[i] &amp; maskOctets[i])) {</span>
+<span class="fc" id="L108">                return false;</span>
+            }
+        }
+<span class="fc" id="L111">        return true;</span>
+    }
+
+    /**
+     * Creates an IPAddress from four integer octet values.
+     *
+     * @param a first octet
+     * @param b second octet
+     * @param c third octet
+     * @param d fourth octet
+     * @return new IPAddress
+     * @throws IllegalArgumentException if any octet is out of range
+     */
+    public static IPAddress of(int a, int b, int c, int d) {
+<span class="fc" id="L125">        return new IPAddress(a + &quot;.&quot; + b + &quot;.&quot; + c + &quot;.&quot; + d);</span>
+    }
+
+    @Override
+    public boolean equals(Object o) {
+<span class="fc bfc" id="L130" title="All 2 branches covered.">        if (this == o) return true;</span>
+<span class="pc bpc" id="L131" title="1 of 2 branches missed.">        if (!(o instanceof IPAddress other)) return false;</span>
+<span class="fc" id="L132">        return address.equals(other.address);</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="fc" id="L137">        return Objects.hash(address);</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="fc" id="L142">        return address;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
