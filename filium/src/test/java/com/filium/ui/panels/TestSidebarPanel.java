@@ -3,7 +3,7 @@ package com.filium.ui.panels;
 import com.filium.model.devices.DeviceType;
 import com.filium.model.network.NetworkTopology;
 import javafx.application.Platform;
-import javafx.scene.Node;
+// import javafx.scene.Node;
 import javafx.scene.layout.VBox;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
