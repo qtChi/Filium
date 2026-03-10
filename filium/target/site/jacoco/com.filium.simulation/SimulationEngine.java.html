@@ -1,7 +1,149 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SimulationEngine.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Filium</a> &gt; <a href="index.source.html" class="el_package">com.filium.simulation</a> &gt; <span class="el_source">SimulationEngine.java</span></div><h1>SimulationEngine.java</h1><pre class="source lang-java linenums">package com.filium.simulation;
 
-// TODO: Implement SimulationEngine
-<span class="nc" id="L4">public class SimulationEngine {</span>
+import com.filium.model.network.NetworkTopology;
+import com.filium.packet.Packet;
+import com.filium.simulation.protocols.Protocol;
+import com.filium.simulation.protocols.ProtocolRegistry;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Consumer;
+
+/**
+ * Central coordinator of the Filium simulation.
+ * Drives the packet queue, dispatches packets to protocol handlers,
+ * and emits simulation events to registered listeners.
+ */
+public class SimulationEngine {
+
+    private final NetworkTopology topology;
+    private final PacketQueue queue;
+    private final ProtocolRegistry registry;
+    private final SimulationClock clock;
+    private final List&lt;SimulationEvent&gt; eventLog;
+    private final List&lt;Consumer&lt;SimulationEvent&gt;&gt; listeners;
+
+    /**
+     * Constructs a SimulationEngine with all dependencies injected.
+     *
+     * @param topology the network topology to simulate; must not be null
+     * @param registry the protocol handler registry; must not be null
+     * @param clock    the simulation clock; must not be null
+     * @throws IllegalArgumentException if any argument is null
+     */
+<span class="fc" id="L36">    public SimulationEngine(NetworkTopology topology,</span>
+                             ProtocolRegistry registry,
+                             SimulationClock clock) {
+<span class="fc bfc" id="L39" title="All 2 branches covered.">        if (topology == null) throw new IllegalArgumentException(&quot;Topology must not be null&quot;);</span>
+<span class="fc bfc" id="L40" title="All 2 branches covered.">        if (registry == null) throw new IllegalArgumentException(&quot;Registry must not be null&quot;);</span>
+<span class="fc bfc" id="L41" title="All 2 branches covered.">        if (clock    == null) throw new IllegalArgumentException(&quot;Clock must not be null&quot;);</span>
+<span class="fc" id="L42">        this.topology  = topology;</span>
+<span class="fc" id="L43">        this.registry  = registry;</span>
+<span class="fc" id="L44">        this.clock     = clock;</span>
+<span class="fc" id="L45">        this.queue     = new PacketQueue();</span>
+<span class="fc" id="L46">        this.eventLog  = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L47">        this.listeners = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L48">    }</span>
+
+    /**
+     * Enqueues a packet for processing on the next tick.
+     *
+     * @param packet the packet to inject; must not be null
+     * @throws IllegalArgumentException if packet is null
+     */
+    public void sendPacket(Packet packet) {
+<span class="fc bfc" id="L57" title="All 2 branches covered.">        if (packet == null) throw new IllegalArgumentException(&quot;Packet must not be null&quot;);</span>
+<span class="fc" id="L58">        queue.enqueue(packet);</span>
+<span class="fc" id="L59">    }</span>
+
+    /**
+     * Advances the simulation by one tick.
+     * Drains the entire current queue, dispatching each packet to the
+     * appropriate protocol handler and firing all resulting events.
+     * Does nothing if the clock is not running.
+     */
+    public void tick() {
+<span class="fc bfc" id="L68" title="All 2 branches covered.">        if (!clock.isRunning()) return;</span>
+<span class="fc" id="L69">        clock.tick();</span>
+
+<span class="fc" id="L71">        List&lt;Packet&gt; batch = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">        while (!queue.isEmpty()) {</span>
+<span class="fc" id="L73">            queue.dequeue().ifPresent(batch::add);</span>
+        }
+
+<span class="fc bfc" id="L76" title="All 2 branches covered.">        for (Packet packet : batch) {</span>
+<span class="fc" id="L77">            Optional&lt;Protocol&gt; handler = registry.findHandler(packet);</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">            if (handler.isPresent()) {</span>
+<span class="fc" id="L79">                List&lt;SimulationEvent&gt; events =</span>
+<span class="fc" id="L80">                    handler.get().handle(packet, topology, queue);</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">                for (SimulationEvent event : events) {</span>
+<span class="fc" id="L82">                    emit(event);</span>
+                }
+<span class="fc" id="L84">            } else {</span>
+<span class="fc" id="L85">                SimulationEvent dropped = new SimulationEvent(</span>
+<span class="fc" id="L86">                    SimulationEventType.PACKET_DROPPED,</span>
+<span class="fc" id="L87">                    null, null, packet,</span>
+<span class="fc" id="L88">                    &quot;No handler for packet type: &quot; + packet.getType());</span>
+<span class="fc" id="L89">                emit(dropped);</span>
+            }
+        }
+<span class="fc" id="L92">    }</span>
+
+    /**
+     * Registers a listener that will be called for every SimulationEvent emitted.
+     *
+     * @param listener the event consumer; must not be null
+     * @throws IllegalArgumentException if listener is null
+     */
+    public void addListener(Consumer&lt;SimulationEvent&gt; listener) {
+<span class="fc bfc" id="L101" title="All 2 branches covered.">        if (listener == null) throw new IllegalArgumentException(&quot;Listener must not be null&quot;);</span>
+<span class="fc" id="L102">        listeners.add(listener);</span>
+<span class="fc" id="L103">    }</span>
+
+    /**
+     * Removes a previously registered listener.
+     *
+     * @param listener the listener to remove
+     * @return true if it was registered and has been removed
+     */
+    public boolean removeListener(Consumer&lt;SimulationEvent&gt; listener) {
+<span class="fc" id="L112">        return listeners.remove(listener);</span>
+    }
+
+    /**
+     * Returns an unmodifiable view of the full event log.
+     *
+     * @return unmodifiable list of SimulationEvent
+     */
+    public List&lt;SimulationEvent&gt; getEventLog() {
+<span class="fc" id="L121">        return Collections.unmodifiableList(eventLog);</span>
+    }
+
+    /**
+     * Returns the current packet queue size.
+     *
+     * @return number of packets waiting
+     */
+    public int getQueueSize() {
+<span class="fc" id="L130">        return queue.size();</span>
+    }
+
+    /**
+     * Resets the engine: clears the queue, event log, and resets the clock.
+     */
+    public void reset() {
+<span class="fc" id="L137">        queue.clear();</span>
+<span class="fc" id="L138">        eventLog.clear();</span>
+<span class="fc" id="L139">        clock.reset();</span>
+<span class="fc" id="L140">    }</span>
+
+    private void emit(SimulationEvent event) {
+<span class="fc" id="L143">        eventLog.add(event);</span>
+<span class="fc bfc" id="L144" title="All 2 branches covered.">        for (Consumer&lt;SimulationEvent&gt; listener : listeners) {</span>
+<span class="fc" id="L145">            listener.accept(event);</span>
+        }
+<span class="fc" id="L147">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

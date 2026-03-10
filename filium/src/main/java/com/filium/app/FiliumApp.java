@@ -59,9 +59,12 @@ public class FiliumApp extends Application {
         // ── Wire up events ───────────────────────────────────────────
         engine.addListener(logPanel::appendEvent);
         canvas.setOnDeviceSelected(props::showDevice);
+        props.setOnDeviceChanged(canvas::refreshDeviceNode);
 
         sidebar.setOnAddDevice((type, xy) ->
             canvas.addDevice(type, xy[0], xy[1]));
+
+        toolbar.setOnCableModeChanged(canvas::setCableMode);
 
         toolbar.setOnNew(() -> {
             canvas.clear();
@@ -95,7 +98,9 @@ public class FiliumApp extends Application {
         toolbar.getResetButton().setOnAction(e -> {
             clock.stop();
             engine.reset();
+            canvas.clear();
             logPanel.clear();
+            props.showDevice(null);
             toolbar.getStartButton().setDisable(false);
             toolbar.getStopButton().setDisable(true);
         });

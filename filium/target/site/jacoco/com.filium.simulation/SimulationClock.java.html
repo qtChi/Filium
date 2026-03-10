@@ -1,7 +1,101 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SimulationClock.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Filium</a> &gt; <a href="index.source.html" class="el_package">com.filium.simulation</a> &gt; <span class="el_source">SimulationClock.java</span></div><h1>SimulationClock.java</h1><pre class="source lang-java linenums">package com.filium.simulation;
 
-// TODO: Implement SimulationClock
-<span class="nc" id="L4">public class SimulationClock {</span>
+/**
+ * Controls simulation tick speed, independent of wall-clock time.
+ * The SimulationEngine advances one tick per call to {@link #tick()}.
+ * Speed is expressed as a multiplier: 1.0 = normal, 2.0 = double speed.
+ */
+public class SimulationClock {
 
+    public static final double MIN_SPEED = 0.25;
+    public static final double MAX_SPEED = 8.0;
+    public static final double DEFAULT_SPEED = 1.0;
+
+    private long tickCount;
+    private double speed;
+    private boolean running;
+
+    /** Constructs a SimulationClock at default speed, not running. */
+<span class="fc" id="L19">    public SimulationClock() {</span>
+<span class="fc" id="L20">        this.tickCount = 0;</span>
+<span class="fc" id="L21">        this.speed     = DEFAULT_SPEED;</span>
+<span class="fc" id="L22">        this.running   = false;</span>
+<span class="fc" id="L23">    }</span>
+
+    /**
+     * Starts the simulation clock.
+     * Has no effect if already running.
+     */
+    public void start() {
+<span class="fc" id="L30">        running = true;</span>
+<span class="fc" id="L31">    }</span>
+
+    /**
+     * Pauses the simulation clock.
+     * Has no effect if already stopped.
+     */
+    public void stop() {
+<span class="fc" id="L38">        running = false;</span>
+<span class="fc" id="L39">    }</span>
+
+    /**
+     * Returns true if the clock is currently running.
+     *
+     * @return true if running
+     */
+    public boolean isRunning() {
+<span class="fc" id="L47">        return running;</span>
+    }
+
+    /**
+     * Advances the tick counter by one if the clock is running.
+     * Does nothing if paused.
+     */
+    public void tick() {
+<span class="fc bfc" id="L55" title="All 2 branches covered.">        if (running) {</span>
+<span class="fc" id="L56">            tickCount++;</span>
+        }
+<span class="fc" id="L58">    }</span>
+
+    /**
+     * Returns the total number of ticks elapsed since the clock was created or reset.
+     *
+     * @return tick count
+     */
+    public long getTickCount() {
+<span class="fc" id="L66">        return tickCount;</span>
+    }
+
+    /**
+     * Returns the current simulation speed multiplier.
+     *
+     * @return speed between MIN_SPEED and MAX_SPEED inclusive
+     */
+    public double getSpeed() {
+<span class="fc" id="L75">        return speed;</span>
+    }
+
+    /**
+     * Sets the simulation speed multiplier.
+     *
+     * @param speed the new speed; must be between MIN_SPEED and MAX_SPEED inclusive
+     * @throws IllegalArgumentException if speed is out of range
+     */
+    public void setSpeed(double speed) {
+<span class="fc bfc" id="L85" title="All 4 branches covered.">        if (speed &lt; MIN_SPEED || speed &gt; MAX_SPEED) {</span>
+<span class="fc" id="L86">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L87">                &quot;Speed must be between &quot; + MIN_SPEED + &quot; and &quot; + MAX_SPEED</span>
+<span class="fc" id="L88">                + &quot;, got: &quot; + speed);</span>
+        }
+<span class="fc" id="L90">        this.speed = speed;</span>
+<span class="fc" id="L91">    }</span>
+
+    /**
+     * Resets the tick counter to zero and stops the clock.
+     */
+    public void reset() {
+<span class="fc" id="L97">        tickCount = 0;</span>
+<span class="fc" id="L98">        running   = false;</span>
+<span class="fc" id="L99">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

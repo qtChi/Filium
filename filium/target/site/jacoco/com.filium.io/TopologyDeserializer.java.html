@@ -1,7 +1,92 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TopologyDeserializer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Filium</a> &gt; <a href="index.source.html" class="el_package">com.filium.io</a> &gt; <span class="el_source">TopologyDeserializer.java</span></div><h1>TopologyDeserializer.java</h1><pre class="source lang-java linenums">package com.filium.io;
 
-// TODO: Implement TopologyDeserializer
-<span class="nc" id="L4">public class TopologyDeserializer {</span>
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.filium.model.devices.*;
+import com.filium.model.network.Cable;
+import com.filium.model.network.IPAddress;
+import com.filium.model.network.NetworkTopology;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Deserializes a NetworkTopology from a JSON file produced by TopologySerializer.
+ */
+public class TopologyDeserializer {
+
+    private final ObjectMapper mapper;
+
+    /** Constructs a TopologyDeserializer. */
+<span class="fc" id="L23">    public TopologyDeserializer() {</span>
+<span class="fc" id="L24">        this.mapper = new ObjectMapper();</span>
+<span class="fc" id="L25">    }</span>
+
+    /**
+     * Deserializes a NetworkTopology from the given JSON file.
+     *
+     * @param file the source file; must not be null and must exist
+     * @return reconstructed NetworkTopology
+     * @throws IllegalArgumentException if file is null
+     * @throws IOException              if reading or parsing fails
+     */
+    public NetworkTopology deserialize(File file) throws IOException {
+<span class="fc bfc" id="L36" title="All 2 branches covered.">        if (file == null) throw new IllegalArgumentException(&quot;File must not be null&quot;);</span>
+
+<span class="fc" id="L38">        JsonNode root = mapper.readTree(file);</span>
+<span class="fc" id="L39">        NetworkTopology topology = new NetworkTopology();</span>
+<span class="fc" id="L40">        Map&lt;String, Device&gt; byId = new HashMap&lt;&gt;();</span>
+
+<span class="fc" id="L42">        JsonNode devicesNode = root.get(&quot;devices&quot;);</span>
+<span class="fc bfc" id="L43" title="All 2 branches covered.">        if (devicesNode != null) {</span>
+<span class="fc bfc" id="L44" title="All 2 branches covered.">            for (JsonNode d : devicesNode) {</span>
+<span class="fc" id="L45">                String typeName = d.get(&quot;type&quot;).asText();</span>
+<span class="fc" id="L46">                String name     = d.get(&quot;name&quot;).asText();</span>
+<span class="fc" id="L47">                DeviceType type = DeviceType.valueOf(typeName);</span>
+
+<span class="fc" id="L49">                Device device = createDevice(type, name);</span>
+
+<span class="fc" id="L51">                String ip   = d.get(&quot;ip&quot;).asText();</span>
+<span class="fc" id="L52">                String mask = d.get(&quot;mask&quot;).asText();</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">                if (!ip.isBlank()) {</span>
+<span class="fc" id="L54">                    device.getNetworkInterface().setIpAddress(new IPAddress(ip));</span>
+                }
+<span class="fc" id="L56">                device.getNetworkInterface().setSubnetMask(mask);</span>
+<span class="fc" id="L57">                device.setX(d.get(&quot;x&quot;).asDouble());</span>
+<span class="fc" id="L58">                device.setY(d.get(&quot;y&quot;).asDouble());</span>
+
+<span class="fc" id="L60">                topology.addDevice(device);</span>
+<span class="fc" id="L61">                byId.put(d.get(&quot;id&quot;).asText(), device);</span>
+            }
+        }
+
+<span class="fc" id="L65">        JsonNode cablesNode = root.get(&quot;cables&quot;);</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">        if (cablesNode != null) {</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">            for (JsonNode c : cablesNode) {</span>
+<span class="fc" id="L68">                String aId = c.get(&quot;endpointAId&quot;).asText();</span>
+<span class="fc" id="L69">                String bId = c.get(&quot;endpointBId&quot;).asText();</span>
+<span class="fc" id="L70">                Device a   = byId.get(aId);</span>
+<span class="fc" id="L71">                Device b   = byId.get(bId);</span>
+<span class="pc bpc" id="L72" title="1 of 4 branches missed.">                if (a != null &amp;&amp; b != null) {</span>
+<span class="fc" id="L73">                    topology.addCable(new Cable(a, b));</span>
+                }
+            }
+        }
+
+<span class="fc" id="L78">        return topology;</span>
+    }
+
+    private Device createDevice(DeviceType type, String name) {
+<span class="fc bfc" id="L82" title="All 6 branches covered.">        return switch (type) {</span>
+<span class="fc" id="L83">            case PC          -&gt; new PC(name);</span>
+<span class="fc" id="L84">            case ROUTER      -&gt; new Router(name);</span>
+<span class="fc" id="L85">            case SWITCH      -&gt; new Switch(name);</span>
+<span class="fc" id="L86">            case DNS_SERVER  -&gt; new DNSServer(name);</span>
+<span class="fc" id="L87">            case DHCP_SERVER -&gt; new DHCPServer(name);</span>
+<span class="fc" id="L88">            case FIREWALL    -&gt; new Firewall(name);</span>
+        };
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

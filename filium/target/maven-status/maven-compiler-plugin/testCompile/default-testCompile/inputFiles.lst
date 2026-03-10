@@ -30,9 +30,7 @@
 /Users/x/Desktop/ /Filium/filium/src/test/java/com/filium/simulation/protocols/TestICMPHandler.java
 /Users/x/Desktop/ /Filium/filium/src/test/java/com/filium/simulation/protocols/TestProtocolRegistry.java
 /Users/x/Desktop/ /Filium/filium/src/test/java/com/filium/ui/canvas/TestCableEdge.java
-/Users/x/Desktop/ /Filium/filium/src/test/java/com/filium/ui/canvas/TestCanvasController.java
 /Users/x/Desktop/ /Filium/filium/src/test/java/com/filium/ui/canvas/TestDeviceNode.java
-/Users/x/Desktop/ /Filium/filium/src/test/java/com/filium/ui/canvas/TestNetworkCanvas.java
 /Users/x/Desktop/ /Filium/filium/src/test/java/com/filium/ui/dialogs/TestAboutDialog.java
 /Users/x/Desktop/ /Filium/filium/src/test/java/com/filium/ui/dialogs/TestDeviceConfigDialog.java
 /Users/x/Desktop/ /Filium/filium/src/test/java/com/filium/ui/panels/TestPropertiesPanel.java

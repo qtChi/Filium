@@ -1,7 +1,95 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DHCPHandler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Filium</a> &gt; <a href="index.source.html" class="el_package">com.filium.simulation.protocols</a> &gt; <span class="el_source">DHCPHandler.java</span></div><h1>DHCPHandler.java</h1><pre class="source lang-java linenums">package com.filium.simulation.protocols;
 
-// TODO: Implement DHCPHandler
-<span class="nc" id="L4">public class DHCPHandler implements Protocol {</span>
+import com.filium.model.devices.DHCPServer;
+import com.filium.model.devices.Device;
+import com.filium.model.network.IPAddress;
+import com.filium.model.network.NetworkTopology;
+import com.filium.packet.Packet;
+import com.filium.packet.PacketHeader;
+import com.filium.packet.PacketType;
+import com.filium.simulation.PacketQueue;
+import com.filium.simulation.SimulationEvent;
+import com.filium.simulation.SimulationEventType;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * Handles DHCP_DISCOVER and DHCP_REQUEST packets.
+ * Finds the DHCP server in the topology, assigns an IP, and enqueues
+ * DHCP_OFFER / DHCP_ACK responses.
+ */
+<span class="fc" id="L23">public class DHCPHandler implements Protocol {</span>
+
+    @Override
+    public boolean canHandle(Packet packet) {
+<span class="fc bfc" id="L27" title="All 2 branches covered.">        return packet.getType() == PacketType.DHCP_DISCOVER</span>
+<span class="fc bfc" id="L28" title="All 2 branches covered.">            || packet.getType() == PacketType.DHCP_REQUEST</span>
+<span class="fc bfc" id="L29" title="All 2 branches covered.">            || packet.getType() == PacketType.DHCP_OFFER</span>
+<span class="fc bfc" id="L30" title="All 2 branches covered.">            || packet.getType() == PacketType.DHCP_ACK;</span>
+    }
+
+    @Override
+    public List&lt;SimulationEvent&gt; handle(Packet packet,
+                                        NetworkTopology topology,
+                                        PacketQueue queue) {
+<span class="fc" id="L37">        List&lt;SimulationEvent&gt; events = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L39" title="All 2 branches covered.">        if (packet.getType() == PacketType.DHCP_OFFER</span>
+<span class="fc bfc" id="L40" title="All 2 branches covered.">            || packet.getType() == PacketType.DHCP_ACK) {</span>
+<span class="fc" id="L41">            events.add(new SimulationEvent(</span>
+<span class="fc" id="L42">                SimulationEventType.PACKET_RECEIVED,</span>
+<span class="fc" id="L43">                null, null, packet,</span>
+<span class="fc" id="L44">                &quot;DHCP &quot; + packet.getType() + &quot; received&quot;));</span>
+<span class="fc" id="L45">            return events;</span>
+        }
+
+        // Find DHCP server
+<span class="fc" id="L49">        DHCPServer dhcpServer = null;</span>
+<span class="fc bfc" id="L50" title="All 2 branches covered.">        for (Device d : topology.getDevices()) {</span>
+<span class="fc bfc" id="L51" title="All 2 branches covered.">            if (d instanceof DHCPServer ds) {</span>
+<span class="fc" id="L52">                dhcpServer = ds;</span>
+<span class="fc" id="L53">                break;</span>
+            }
+        }
+
+<span class="fc bfc" id="L57" title="All 4 branches covered.">        if (dhcpServer == null || dhcpServer.getNetworkInterface().getIpAddress() == null) {</span>
+<span class="fc" id="L58">            events.add(new SimulationEvent(</span>
+<span class="fc" id="L59">                SimulationEventType.PACKET_DROPPED,</span>
+<span class="fc" id="L60">                null, null, packet,</span>
+<span class="fc" id="L61">                &quot;DHCP &quot; + packet.getType() + &quot; dropped — no DHCP server in topology&quot;));</span>
+<span class="fc" id="L62">            return events;</span>
+        }
+
+<span class="fc" id="L65">        String clientMAC = packet.getHeader().getSourceMAC();</span>
+<span class="fc" id="L66">        Optional&lt;IPAddress&gt; assigned = dhcpServer.assignIP(clientMAC);</span>
+
+<span class="fc bfc" id="L68" title="All 2 branches covered.">        if (assigned.isPresent()) {</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">            PacketType responseType = packet.getType() == PacketType.DHCP_DISCOVER</span>
+<span class="fc" id="L70">                ? PacketType.DHCP_OFFER : PacketType.DHCP_ACK;</span>
+
+<span class="fc" id="L72">            PacketHeader responseHeader = new PacketHeader(</span>
+<span class="fc" id="L73">                dhcpServer.getNetworkInterface().getIpAddress(),</span>
+<span class="fc" id="L74">                packet.getHeader().getSourceIP(),</span>
+<span class="fc" id="L75">                dhcpServer.getNetworkInterface().getMacAddress(),</span>
+<span class="fc" id="L76">                packet.getHeader().getSourceMAC(),</span>
+<span class="fc" id="L77">                64);</span>
+<span class="fc" id="L78">            queue.enqueue(new Packet(responseType, responseHeader,</span>
+<span class="fc" id="L79">                assigned.get().getAddress()));</span>
+
+<span class="fc" id="L81">            events.add(new SimulationEvent(</span>
+<span class="fc" id="L82">                SimulationEventType.DHCP_ASSIGNED,</span>
+<span class="fc" id="L83">                dhcpServer, null, packet,</span>
+<span class="fc" id="L84">                &quot;DHCP assigned &quot; + assigned.get() + &quot; to &quot; + clientMAC));</span>
+<span class="fc" id="L85">        } else {</span>
+<span class="fc" id="L86">            events.add(new SimulationEvent(</span>
+<span class="fc" id="L87">                SimulationEventType.PACKET_DROPPED,</span>
+<span class="fc" id="L88">                dhcpServer, null, packet,</span>
+<span class="fc" id="L89">                &quot;DHCP pool exhausted — cannot assign IP to &quot; + clientMAC));</span>
+        }
+
+<span class="fc" id="L92">        return events;</span>
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

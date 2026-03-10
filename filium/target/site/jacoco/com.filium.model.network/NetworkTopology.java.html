@@ -1,7 +1,216 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NetworkTopology.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Filium</a> &gt; <a href="index.source.html" class="el_package">com.filium.model.network</a> &gt; <span class="el_source">NetworkTopology.java</span></div><h1>NetworkTopology.java</h1><pre class="source lang-java linenums">package com.filium.model.network;
 
-// TODO: Implement NetworkTopology
-<span class="nc" id="L4">public class NetworkTopology {</span>
+import com.filium.model.devices.Device;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * Holds the complete set of devices and cables that make up a network topology.
+ * Acts as the central data store — devices and cables are added/removed here,
+ * and the SimulationEngine reads from this topology when routing packets.
+ */
+public class NetworkTopology {
+
+    private final List&lt;Device&gt; devices;
+    private final List&lt;Cable&gt; cables;
+
+    /**
+     * Constructs an empty NetworkTopology.
+     */
+<span class="fc" id="L23">    public NetworkTopology() {</span>
+<span class="fc" id="L24">        this.devices = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L25">        this.cables = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L26">    }</span>
+
+    /**
+     * Adds a device to the topology.
+     *
+     * @param device the device to add; must not be null
+     * @throws IllegalArgumentException if device is null
+     * @throws IllegalStateException    if a device with the same ID already exists
+     */
+    public void addDevice(Device device) {
+<span class="fc bfc" id="L36" title="All 2 branches covered.">        if (device == null) {</span>
+<span class="fc" id="L37">            throw new IllegalArgumentException(&quot;Device must not be null&quot;);</span>
+        }
+<span class="fc bfc" id="L39" title="All 2 branches covered.">        for (Device existing : devices) {</span>
+<span class="fc bfc" id="L40" title="All 2 branches covered.">            if (existing.getId().equals(device.getId())) {</span>
+<span class="fc" id="L41">                throw new IllegalStateException(</span>
+<span class="fc" id="L42">                    &quot;A device with ID '&quot; + device.getId() + &quot;' already exists&quot;);</span>
+            }
+        }
+<span class="fc" id="L45">        devices.add(device);</span>
+<span class="fc" id="L46">    }</span>
+
+    /**
+     * Removes a device and all cables connected to it from the topology.
+     *
+     * @param device the device to remove; must not be null
+     * @return true if the device was found and removed, false if not present
+     * @throws IllegalArgumentException if device is null
+     */
+    public boolean removeDevice(Device device) {
+<span class="fc bfc" id="L56" title="All 2 branches covered.">        if (device == null) {</span>
+<span class="fc" id="L57">            throw new IllegalArgumentException(&quot;Device must not be null&quot;);</span>
+        }
+<span class="fc" id="L59">        boolean removed = devices.remove(device);</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">        if (removed) {</span>
+<span class="fc" id="L61">            cables.removeIf(cable -&gt; cable.connects(device));</span>
+        }
+<span class="fc" id="L63">        return removed;</span>
+    }
+
+    /**
+     * Returns an unmodifiable view of all devices in the topology.
+     *
+     * @return unmodifiable list of Device
+     */
+    public List&lt;Device&gt; getDevices() {
+<span class="fc" id="L72">        return Collections.unmodifiableList(devices);</span>
+    }
+
+    /**
+     * Finds a device by its unique ID.
+     *
+     * @param id the UUID string to search for
+     * @return Optional containing the Device if found, empty otherwise
+     */
+    public Optional&lt;Device&gt; findDeviceById(String id) {
+<span class="fc bfc" id="L82" title="All 2 branches covered.">        if (id == null) return Optional.empty();</span>
+<span class="fc" id="L83">        return devices.stream()</span>
+<span class="fc" id="L84">            .filter(d -&gt; d.getId().equals(id))</span>
+<span class="fc" id="L85">            .findFirst();</span>
+    }
+
+    /**
+     * Finds a device by its name. Returns the first match if multiple devices
+     * share the same name.
+     *
+     * @param name the name to search for
+     * @return Optional containing the Device if found, empty otherwise
+     */
+    public Optional&lt;Device&gt; findDeviceByName(String name) {
+<span class="fc bfc" id="L96" title="All 2 branches covered.">        if (name == null) return Optional.empty();</span>
+<span class="fc" id="L97">        return devices.stream()</span>
+<span class="fc" id="L98">            .filter(d -&gt; d.getName().equals(name))</span>
+<span class="fc" id="L99">            .findFirst();</span>
+    }
+
+    /**
+     * Adds a cable to the topology. Both endpoints must already be present
+     * in the topology.
+     *
+     * @param cable the cable to add; must not be null
+     * @throws IllegalArgumentException if cable is null or if either endpoint
+     *                                  is not registered in this topology
+     */
+    public void addCable(Cable cable) {
+<span class="fc bfc" id="L111" title="All 2 branches covered.">        if (cable == null) {</span>
+<span class="fc" id="L112">            throw new IllegalArgumentException(&quot;Cable must not be null&quot;);</span>
+        }
+<span class="fc bfc" id="L114" title="All 2 branches covered.">        if (!devices.contains(cable.getEndpointA())) {</span>
+<span class="fc" id="L115">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L116">                &quot;Endpoint A '&quot; + cable.getEndpointA().getName()</span>
+                + &quot;' is not in this topology&quot;);
+        }
+<span class="fc bfc" id="L119" title="All 2 branches covered.">        if (!devices.contains(cable.getEndpointB())) {</span>
+<span class="fc" id="L120">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L121">                &quot;Endpoint B '&quot; + cable.getEndpointB().getName()</span>
+                + &quot;' is not in this topology&quot;);
+        }
+<span class="fc" id="L124">        cables.add(cable);</span>
+<span class="fc" id="L125">    }</span>
+
+    /**
+     * Removes a cable from the topology.
+     *
+     * @param cable the cable to remove; must not be null
+     * @return true if the cable was found and removed, false if not present
+     * @throws IllegalArgumentException if cable is null
+     */
+    public boolean removeCable(Cable cable) {
+<span class="fc bfc" id="L135" title="All 2 branches covered.">        if (cable == null) {</span>
+<span class="fc" id="L136">            throw new IllegalArgumentException(&quot;Cable must not be null&quot;);</span>
+        }
+<span class="fc" id="L138">        return cables.remove(cable);</span>
+    }
+
+    /**
+     * Returns an unmodifiable view of all cables in the topology.
+     *
+     * @return unmodifiable list of Cable
+     */
+    public List&lt;Cable&gt; getCables() {
+<span class="fc" id="L147">        return Collections.unmodifiableList(cables);</span>
+    }
+
+    /**
+     * Returns all cables directly connected to the given device.
+     *
+     * @param device the device to query; must not be null
+     * @return list of cables that have the given device as an endpoint
+     * @throws IllegalArgumentException if device is null
+     */
+    public List&lt;Cable&gt; getCablesForDevice(Device device) {
+<span class="fc bfc" id="L158" title="All 2 branches covered.">        if (device == null) {</span>
+<span class="fc" id="L159">            throw new IllegalArgumentException(&quot;Device must not be null&quot;);</span>
+        }
+<span class="fc" id="L161">        List&lt;Cable&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L162" title="All 2 branches covered.">        for (Cable cable : cables) {</span>
+<span class="pc bpc" id="L163" title="1 of 2 branches missed.">            if (cable.connects(device)) {</span>
+<span class="fc" id="L164">                result.add(cable);</span>
+            }
+        }
+<span class="fc" id="L167">        return Collections.unmodifiableList(result);</span>
+    }
+
+    /**
+     * Returns true if the two given devices are directly connected by a cable.
+     *
+     * @param a first device; must not be null
+     * @param b second device; must not be null
+     * @return true if a cable exists between a and b
+     * @throws IllegalArgumentException if either device is null
+     */
+    public boolean areConnected(Device a, Device b) {
+<span class="fc bfc" id="L179" title="All 4 branches covered.">        if (a == null || b == null) {</span>
+<span class="fc" id="L180">            throw new IllegalArgumentException(&quot;Devices must not be null&quot;);</span>
+        }
+<span class="fc bfc" id="L182" title="All 2 branches covered.">        for (Cable cable : cables) {</span>
+<span class="pc bpc" id="L183" title="2 of 4 branches missed.">            if (cable.connects(a) &amp;&amp; cable.connects(b)) {</span>
+<span class="fc" id="L184">                return true;</span>
+            }
+        }
+<span class="fc" id="L187">        return false;</span>
+    }
+
+    /**
+     * Clears all devices and cables from the topology.
+     */
+    public void clear() {
+<span class="fc" id="L194">        devices.clear();</span>
+<span class="fc" id="L195">        cables.clear();</span>
+<span class="fc" id="L196">    }</span>
+
+    /**
+     * Returns the number of devices in the topology.
+     *
+     * @return device count
+     */
+    public int deviceCount() {
+<span class="fc" id="L204">        return devices.size();</span>
+    }
+
+    /**
+     * Returns the number of cables in the topology.
+     *
+     * @return cable count
+     */
+    public int cableCount() {
+<span class="fc" id="L213">        return cables.size();</span>
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

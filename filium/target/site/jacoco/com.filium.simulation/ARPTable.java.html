@@ -1,7 +1,107 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ARPTable.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Filium</a> &gt; <a href="index.source.html" class="el_package">com.filium.simulation</a> &gt; <span class="el_source">ARPTable.java</span></div><h1>ARPTable.java</h1><pre class="source lang-java linenums">package com.filium.simulation;
 
-// TODO: Implement ARPTable
-<span class="nc" id="L4">public class ARPTable {</span>
+import com.filium.model.network.IPAddress;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
+/**
+ * Maintains a mapping of IP address to MAC address for devices on the same
+ * Layer 2 segment. Populated by ARPHandler during simulation.
+ */
+public class ARPTable {
+
+    private final Map&lt;String, String&gt; table; // IP string -&gt; MAC string
+
+    /** Constructs an empty ARPTable. */
+<span class="fc" id="L19">    public ARPTable() {</span>
+<span class="fc" id="L20">        this.table = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L21">    }</span>
+
+    /**
+     * Adds or updates an ARP entry.
+     *
+     * @param ip  the IP address; must not be null
+     * @param mac the MAC address string; must not be null or blank
+     * @throws IllegalArgumentException if ip is null or mac is null/blank
+     */
+    public void put(IPAddress ip, String mac) {
+<span class="fc bfc" id="L31" title="All 2 branches covered.">        if (ip == null) {</span>
+<span class="fc" id="L32">            throw new IllegalArgumentException(&quot;IP address must not be null&quot;);</span>
+        }
+<span class="fc bfc" id="L34" title="All 4 branches covered.">        if (mac == null || mac.isBlank()) {</span>
+<span class="fc" id="L35">            throw new IllegalArgumentException(&quot;MAC address must not be null or blank&quot;);</span>
+        }
+<span class="fc" id="L37">        table.put(ip.getAddress(), mac);</span>
+<span class="fc" id="L38">    }</span>
+
+    /**
+     * Looks up the MAC address for a given IP.
+     *
+     * @param ip the IP address to look up; must not be null
+     * @return Optional containing the MAC string if found, empty otherwise
+     * @throws IllegalArgumentException if ip is null
+     */
+    public Optional&lt;String&gt; lookup(IPAddress ip) {
+<span class="fc bfc" id="L48" title="All 2 branches covered.">        if (ip == null) {</span>
+<span class="fc" id="L49">            throw new IllegalArgumentException(&quot;IP address must not be null&quot;);</span>
+        }
+<span class="fc" id="L51">        return Optional.ofNullable(table.get(ip.getAddress()));</span>
+    }
+
+    /**
+     * Removes the ARP entry for the given IP address.
+     *
+     * @param ip the IP address to remove; must not be null
+     * @return true if an entry was removed, false if not found
+     * @throws IllegalArgumentException if ip is null
+     */
+    public boolean remove(IPAddress ip) {
+<span class="fc bfc" id="L62" title="All 2 branches covered.">        if (ip == null) {</span>
+<span class="fc" id="L63">            throw new IllegalArgumentException(&quot;IP address must not be null&quot;);</span>
+        }
+<span class="fc bfc" id="L65" title="All 2 branches covered.">        return table.remove(ip.getAddress()) != null;</span>
+    }
+
+    /**
+     * Returns true if an entry exists for the given IP.
+     *
+     * @param ip the IP address to check; must not be null
+     * @return true if a mapping exists
+     * @throws IllegalArgumentException if ip is null
+     */
+    public boolean contains(IPAddress ip) {
+<span class="fc bfc" id="L76" title="All 2 branches covered.">        if (ip == null) {</span>
+<span class="fc" id="L77">            throw new IllegalArgumentException(&quot;IP address must not be null&quot;);</span>
+        }
+<span class="fc" id="L79">        return table.containsKey(ip.getAddress());</span>
+    }
+
+    /**
+     * Returns an unmodifiable view of all ARP entries.
+     *
+     * @return unmodifiable map of IP string to MAC string
+     */
+    public Map&lt;String, String&gt; getEntries() {
+<span class="fc" id="L88">        return Collections.unmodifiableMap(table);</span>
+    }
+
+    /**
+     * Returns the number of entries in the ARP table.
+     *
+     * @return entry count
+     */
+    public int size() {
+<span class="fc" id="L97">        return table.size();</span>
+    }
+
+    /**
+     * Removes all entries from the ARP table.
+     */
+    public void clear() {
+<span class="fc" id="L104">        table.clear();</span>
+<span class="fc" id="L105">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

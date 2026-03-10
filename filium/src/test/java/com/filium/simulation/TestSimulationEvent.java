@@ -71,7 +71,7 @@ class TestSimulationEvent {
         SimulationEvent e = event(); assertEquals(e, e);
     }
     @Test void equals_differentInstances_returnsFalse() {
-        // timestamps will differ
+        // Each call to event() creates a new UUID — always unequal
         assertNotEquals(event(), event());
     }
     @Test void equals_null_returnsFalse() { assertNotEquals(null, event()); }
@@ -79,5 +79,9 @@ class TestSimulationEvent {
     @Test void hashCode_sameInstance_consistent() {
         SimulationEvent e = event();
         assertEquals(e.hashCode(), e.hashCode());
+    }
+    @Test void hashCode_differentInstances_differOrEqual_noThrow() {
+        // Two distinct events — no contract violation either way, just must not throw
+        assertDoesNotThrow(() -> { event().hashCode(); event().hashCode(); });
     }
 }

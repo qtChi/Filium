@@ -10,7 +10,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Separator;
 import javafx.scene.control.ToolBar;
-// import javafx.scene.control.Tooltip;
+import javafx.scene.control.Tooltip;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
@@ -30,6 +30,9 @@ public class ToolbarPanel {
     private final Button btnStart;
     private final Button btnStop;
     private final Button btnReset;
+    private Button btnCable;
+    private boolean cableMode = false;
+    private java.util.function.Consumer<Boolean> onCableModeChanged;
 
     private Runnable onNew;
     private java.util.function.Consumer<NetworkTopology> onLoad;
@@ -75,14 +78,28 @@ public class ToolbarPanel {
         Button btnOpen = button("Open", "#555577");
         Button btnSave = button("Save", "#555577");
 
+        btnCable = button("✦  Cable", "#2C003E");
+        btnCable.setStyle(btnCable.getStyle()
+            + " -fx-border-color: #00D4FF; -fx-border-width: 0; -fx-border-radius: 6;");
+
         btnNew.setOnAction(e  -> handleNew());
         btnOpen.setOnAction(e -> handleOpen());
         btnSave.setOnAction(e -> handleSave());
+        btnCable.setOnAction(e -> {
+            cableMode = !cableMode;
+            if (onCableModeChanged != null) onCableModeChanged.accept(cableMode);
+            btnCable.setStyle(
+                "-fx-background-color: " + (cableMode ? "#00D4FF" : "#2C003E")
+                + "; -fx-text-fill: " + (cableMode ? "#0D0D1F" : "#EAEAEA")
+                + "; -fx-background-radius: 6; -fx-font-size: 12;");
+        });
 
         toolBar = new ToolBar(
             btnNew, btnOpen, btnSave,
             new Separator(),
-            btnStart, btnStop, btnReset
+            btnStart, btnStop, btnReset,
+            new Separator(),
+            btnCable
         );
         toolBar.setPadding(new Insets(6, 10, 6, 10));
         toolBar.setStyle("-fx-background-color: #1A1A2E; -fx-border-color: #2E2E4E;");
@@ -96,6 +113,10 @@ public class ToolbarPanel {
     public Button getStartButton() { return btnStart; }
     public Button getStopButton()  { return btnStop; }
     public Button getResetButton() { return btnReset; }
+
+    public void setOnCableModeChanged(java.util.function.Consumer<Boolean> handler) {
+        this.onCableModeChanged = handler;
+    }
 
     // ─────────────────────────────────────────────────────────────────
 

@@ -1,7 +1,90 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DNSHandler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Filium</a> &gt; <a href="index.source.html" class="el_package">com.filium.simulation.protocols</a> &gt; <span class="el_source">DNSHandler.java</span></div><h1>DNSHandler.java</h1><pre class="source lang-java linenums">package com.filium.simulation.protocols;
 
-// TODO: Implement DNSHandler
-<span class="nc" id="L4">public class DNSHandler implements Protocol {</span>
+import com.filium.model.devices.DNSServer;
+import com.filium.model.devices.Device;
+import com.filium.model.network.IPAddress;
+import com.filium.model.network.NetworkTopology;
+import com.filium.packet.Packet;
+import com.filium.packet.PacketHeader;
+import com.filium.packet.PacketType;
+import com.filium.simulation.PacketQueue;
+import com.filium.simulation.SimulationEvent;
+import com.filium.simulation.SimulationEventType;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * Handles DNS_QUERY packets.
+ * Finds the DNS server in the topology, looks up the queried hostname,
+ * enqueues a DNS_RESPONSE, and emits DNS_RESOLVED or DNS_FAILED.
+ */
+<span class="fc" id="L23">public class DNSHandler implements Protocol {</span>
+
+    @Override
+    public boolean canHandle(Packet packet) {
+<span class="fc bfc" id="L27" title="All 2 branches covered.">        return packet.getType() == PacketType.DNS_QUERY</span>
+<span class="fc bfc" id="L28" title="All 2 branches covered.">            || packet.getType() == PacketType.DNS_RESPONSE;</span>
+    }
+
+    @Override
+    public List&lt;SimulationEvent&gt; handle(Packet packet,
+                                        NetworkTopology topology,
+                                        PacketQueue queue) {
+<span class="fc" id="L35">        List&lt;SimulationEvent&gt; events = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L37" title="All 2 branches covered.">        if (packet.getType() == PacketType.DNS_RESPONSE) {</span>
+            // Responses are delivered to the client — just emit received event
+<span class="fc" id="L39">            events.add(new SimulationEvent(</span>
+<span class="fc" id="L40">                SimulationEventType.PACKET_RECEIVED,</span>
+<span class="fc" id="L41">                null, null, packet,</span>
+<span class="fc" id="L42">                &quot;DNS response received: &quot; + packet.getPayload()));</span>
+<span class="fc" id="L43">            return events;</span>
+        }
+
+        // Find a DNS server in the topology
+<span class="fc" id="L47">        DNSServer dnsServer = null;</span>
+<span class="fc bfc" id="L48" title="All 2 branches covered.">        for (Device d : topology.getDevices()) {</span>
+<span class="fc bfc" id="L49" title="All 2 branches covered.">            if (d instanceof DNSServer ds) {</span>
+<span class="fc" id="L50">                dnsServer = ds;</span>
+<span class="fc" id="L51">                break;</span>
+            }
+        }
+
+<span class="fc bfc" id="L55" title="All 4 branches covered.">        if (dnsServer == null || dnsServer.getNetworkInterface().getIpAddress() == null) {</span>
+<span class="fc" id="L56">            events.add(new SimulationEvent(</span>
+<span class="fc" id="L57">                SimulationEventType.DNS_FAILED,</span>
+<span class="fc" id="L58">                null, null, packet,</span>
+<span class="fc" id="L59">                &quot;DNS query failed — no DNS server in topology&quot;));</span>
+<span class="fc" id="L60">            return events;</span>
+        }
+
+<span class="fc" id="L63">        String hostname = packet.getPayload();</span>
+<span class="fc" id="L64">        Optional&lt;IPAddress&gt; resolved = dnsServer.lookup(hostname);</span>
+
+<span class="fc bfc" id="L66" title="All 2 branches covered.">        if (resolved.isPresent()) {</span>
+<span class="fc" id="L67">            PacketHeader responseHeader = new PacketHeader(</span>
+<span class="fc" id="L68">                dnsServer.getNetworkInterface().getIpAddress(),</span>
+<span class="fc" id="L69">                packet.getHeader().getSourceIP(),</span>
+<span class="fc" id="L70">                dnsServer.getNetworkInterface().getMacAddress(),</span>
+<span class="fc" id="L71">                packet.getHeader().getSourceMAC(),</span>
+<span class="fc" id="L72">                64);</span>
+<span class="fc" id="L73">            queue.enqueue(new Packet(PacketType.DNS_RESPONSE,</span>
+<span class="fc" id="L74">                responseHeader, resolved.get().getAddress()));</span>
+
+<span class="fc" id="L76">            events.add(new SimulationEvent(</span>
+<span class="fc" id="L77">                SimulationEventType.DNS_RESOLVED,</span>
+<span class="fc" id="L78">                dnsServer, null, packet,</span>
+<span class="fc" id="L79">                &quot;DNS resolved: &quot; + hostname + &quot; -&gt; &quot; + resolved.get()));</span>
+<span class="fc" id="L80">        } else {</span>
+<span class="fc" id="L81">            events.add(new SimulationEvent(</span>
+<span class="fc" id="L82">                SimulationEventType.DNS_FAILED,</span>
+<span class="fc" id="L83">                dnsServer, null, packet,</span>
+<span class="fc" id="L84">                &quot;DNS failed: no record for '&quot; + hostname + &quot;'&quot;));</span>
+        }
+
+<span class="fc" id="L87">        return events;</span>
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

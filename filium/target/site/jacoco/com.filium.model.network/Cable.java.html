@@ -1,7 +1,124 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Cable.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Filium</a> &gt; <a href="index.source.html" class="el_package">com.filium.model.network</a> &gt; <span class="el_source">Cable.java</span></div><h1>Cable.java</h1><pre class="source lang-java linenums">package com.filium.model.network;
 
-// TODO: Implement Cable
-<span class="nc" id="L4">public class Cable {</span>
+import com.filium.model.devices.Device;
 
+import java.util.Objects;
+import java.util.UUID;
+
+/**
+ * Represents a network cable connecting exactly two devices.
+ * Cables are undirected — endpointA and endpointB have no implied direction.
+ * Equality is based solely on the cable UUID.
+ */
+public class Cable {
+
+    private final String id;
+    private final Device endpointA;
+    private final Device endpointB;
+
+    /**
+     * Constructs a Cable between two devices.
+     *
+     * @param endpointA the first device; must not be null
+     * @param endpointB the second device; must not be null
+     * @throws IllegalArgumentException if either endpoint is null or if
+     *                                  both endpoints are the same device instance
+     */
+<span class="fc" id="L27">    public Cable(Device endpointA, Device endpointB) {</span>
+<span class="fc bfc" id="L28" title="All 2 branches covered.">        if (endpointA == null) {</span>
+<span class="fc" id="L29">            throw new IllegalArgumentException(&quot;Endpoint A must not be null&quot;);</span>
+        }
+<span class="fc bfc" id="L31" title="All 2 branches covered.">        if (endpointB == null) {</span>
+<span class="fc" id="L32">            throw new IllegalArgumentException(&quot;Endpoint B must not be null&quot;);</span>
+        }
+<span class="fc bfc" id="L34" title="All 2 branches covered.">        if (endpointA == endpointB) {</span>
+<span class="fc" id="L35">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L36">                &quot;A cable cannot connect a device to itself&quot;);</span>
+        }
+<span class="fc" id="L38">        this.id = UUID.randomUUID().toString();</span>
+<span class="fc" id="L39">        this.endpointA = endpointA;</span>
+<span class="fc" id="L40">        this.endpointB = endpointB;</span>
+<span class="fc" id="L41">    }</span>
+
+    /**
+     * Returns the unique identifier for this cable.
+     *
+     * @return UUID string
+     */
+    public String getId() {
+<span class="fc" id="L49">        return id;</span>
+    }
+
+    /**
+     * Returns the first endpoint device.
+     *
+     * @return Device endpointA
+     */
+    public Device getEndpointA() {
+<span class="fc" id="L58">        return endpointA;</span>
+    }
+
+    /**
+     * Returns the second endpoint device.
+     *
+     * @return Device endpointB
+     */
+    public Device getEndpointB() {
+<span class="fc" id="L67">        return endpointB;</span>
+    }
+
+    /**
+     * Returns true if the given device is one of the two endpoints of this cable.
+     *
+     * @param device the device to check; must not be null
+     * @return true if the device is endpointA or endpointB
+     * @throws IllegalArgumentException if device is null
+     */
+    public boolean connects(Device device) {
+<span class="fc bfc" id="L78" title="All 2 branches covered.">        if (device == null) {</span>
+<span class="fc" id="L79">            throw new IllegalArgumentException(&quot;Device must not be null&quot;);</span>
+        }
+<span class="fc bfc" id="L81" title="All 4 branches covered.">        return endpointA.equals(device) || endpointB.equals(device);</span>
+    }
+
+    /**
+     * Given one endpoint, returns the device at the other end of the cable.
+     *
+     * @param device one of the two endpoints; must not be null
+     * @return the other endpoint Device
+     * @throws IllegalArgumentException if device is null or not an endpoint of this cable
+     */
+    public Device getOtherEnd(Device device) {
+<span class="fc bfc" id="L92" title="All 2 branches covered.">        if (device == null) {</span>
+<span class="fc" id="L93">            throw new IllegalArgumentException(&quot;Device must not be null&quot;);</span>
+        }
+<span class="fc bfc" id="L95" title="All 2 branches covered.">        if (endpointA.equals(device)) {</span>
+<span class="fc" id="L96">            return endpointB;</span>
+        }
+<span class="fc bfc" id="L98" title="All 2 branches covered.">        if (endpointB.equals(device)) {</span>
+<span class="fc" id="L99">            return endpointA;</span>
+        }
+<span class="fc" id="L101">        throw new IllegalArgumentException(</span>
+<span class="fc" id="L102">            &quot;Device '&quot; + device.getName() + &quot;' is not an endpoint of this cable&quot;);</span>
+    }
+
+    @Override
+    public boolean equals(Object o) {
+<span class="fc bfc" id="L107" title="All 2 branches covered.">        if (this == o) return true;</span>
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">        if (!(o instanceof Cable other)) return false;</span>
+<span class="fc" id="L109">        return id.equals(other.id);</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="fc" id="L114">        return Objects.hash(id);</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="fc" id="L119">        return &quot;Cable{id=&quot; + id +</span>
+<span class="fc" id="L120">               &quot;, a=&quot; + endpointA.getName() +</span>
+<span class="fc" id="L121">               &quot;, b=&quot; + endpointB.getName() + &quot;}&quot;;</span>
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

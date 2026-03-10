@@ -1,7 +1,77 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PacketQueue.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Filium</a> &gt; <a href="index.source.html" class="el_package">com.filium.simulation</a> &gt; <span class="el_source">PacketQueue.java</span></div><h1>PacketQueue.java</h1><pre class="source lang-java linenums">package com.filium.simulation;
 
-// TODO: Implement PacketQueue
-<span class="nc" id="L4">public class PacketQueue {</span>
+import com.filium.packet.Packet;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.Optional;
+
+/**
+ * Thread-safe FIFO queue of packets awaiting processing by the SimulationEngine.
+ */
+public class PacketQueue {
+
+    private final Deque&lt;Packet&gt; queue;
+
+    /** Constructs an empty PacketQueue. */
+<span class="fc" id="L17">    public PacketQueue() {</span>
+<span class="fc" id="L18">        this.queue = new ArrayDeque&lt;&gt;();</span>
+<span class="fc" id="L19">    }</span>
+
+    /**
+     * Enqueues a packet at the tail of the queue.
+     *
+     * @param packet the packet to enqueue; must not be null
+     * @throws IllegalArgumentException if packet is null
+     */
+    public void enqueue(Packet packet) {
+<span class="fc bfc" id="L28" title="All 2 branches covered.">        if (packet == null) {</span>
+<span class="fc" id="L29">            throw new IllegalArgumentException(&quot;Packet must not be null&quot;);</span>
+        }
+<span class="fc" id="L31">        queue.addLast(packet);</span>
+<span class="fc" id="L32">    }</span>
+
+    /**
+     * Removes and returns the packet at the head of the queue.
+     *
+     * @return Optional containing the next Packet, or empty if the queue is empty
+     */
+    public Optional&lt;Packet&gt; dequeue() {
+<span class="fc" id="L40">        return Optional.ofNullable(queue.pollFirst());</span>
+    }
+
+    /**
+     * Returns but does not remove the packet at the head of the queue.
+     *
+     * @return Optional containing the next Packet, or empty if the queue is empty
+     */
+    public Optional&lt;Packet&gt; peek() {
+<span class="fc" id="L49">        return Optional.ofNullable(queue.peekFirst());</span>
+    }
+
+    /**
+     * Returns true if the queue contains no packets.
+     *
+     * @return true if empty
+     */
+    public boolean isEmpty() {
+<span class="fc" id="L58">        return queue.isEmpty();</span>
+    }
+
+    /**
+     * Returns the number of packets currently in the queue.
+     *
+     * @return queue size
+     */
+    public int size() {
+<span class="fc" id="L67">        return queue.size();</span>
+    }
+
+    /**
+     * Removes all packets from the queue.
+     */
+    public void clear() {
+<span class="fc" id="L74">        queue.clear();</span>
+<span class="fc" id="L75">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,7 +1,72 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TopologySerializer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Filium</a> &gt; <a href="index.source.html" class="el_package">com.filium.io</a> &gt; <span class="el_source">TopologySerializer.java</span></div><h1>TopologySerializer.java</h1><pre class="source lang-java linenums">package com.filium.io;
 
-// TODO: Implement TopologySerializer
-<span class="nc" id="L4">public class TopologySerializer {</span>
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.filium.model.devices.Device;
+import com.filium.model.network.Cable;
+import com.filium.model.network.NetworkTopology;
 
+import java.io.File;
+import java.io.IOException;
+
+/**
+ * Serializes a NetworkTopology to a JSON file.
+ * Each device is written with its id, name, type, IP, MAC, and canvas position.
+ * Each cable is written with its id and the IDs of its two endpoints.
+ */
+public class TopologySerializer {
+
+    private final ObjectMapper mapper;
+
+    /** Constructs a TopologySerializer with pretty-printing enabled. */
+<span class="fc" id="L24">    public TopologySerializer() {</span>
+<span class="fc" id="L25">        this.mapper = new ObjectMapper()</span>
+<span class="fc" id="L26">            .enable(SerializationFeature.INDENT_OUTPUT);</span>
+<span class="fc" id="L27">    }</span>
+
+    /**
+     * Serializes the given topology to the specified file.
+     *
+     * @param topology the topology to serialize; must not be null
+     * @param file     the target file; must not be null
+     * @throws IllegalArgumentException if topology or file is null
+     * @throws IOException              if writing fails
+     */
+    public void serialize(NetworkTopology topology, File file) throws IOException {
+<span class="fc bfc" id="L38" title="All 2 branches covered.">        if (topology == null) throw new IllegalArgumentException(&quot;Topology must not be null&quot;);</span>
+<span class="fc bfc" id="L39" title="All 2 branches covered.">        if (file == null)     throw new IllegalArgumentException(&quot;File must not be null&quot;);</span>
+
+<span class="fc" id="L41">        ObjectNode root = mapper.createObjectNode();</span>
+
+<span class="fc" id="L43">        ArrayNode devicesNode = mapper.createArrayNode();</span>
+<span class="fc bfc" id="L44" title="All 2 branches covered.">        for (Device device : topology.getDevices()) {</span>
+<span class="fc" id="L45">            ObjectNode d = mapper.createObjectNode();</span>
+<span class="fc" id="L46">            d.put(&quot;id&quot;,   device.getId());</span>
+<span class="fc" id="L47">            d.put(&quot;name&quot;, device.getName());</span>
+<span class="fc" id="L48">            d.put(&quot;type&quot;, device.getDeviceType().name());</span>
+<span class="fc" id="L49">            d.put(&quot;mac&quot;,  device.getNetworkInterface().getMacAddress());</span>
+<span class="fc bfc" id="L50" title="All 2 branches covered.">            d.put(&quot;ip&quot;,   device.getNetworkInterface().getIpAddress() != null</span>
+<span class="fc" id="L51">                ? device.getNetworkInterface().getIpAddress().getAddress() : &quot;&quot;);</span>
+<span class="fc" id="L52">            d.put(&quot;mask&quot;, device.getNetworkInterface().getSubnetMask());</span>
+<span class="fc" id="L53">            d.put(&quot;x&quot;,    device.getX());</span>
+<span class="fc" id="L54">            d.put(&quot;y&quot;,    device.getY());</span>
+<span class="fc" id="L55">            devicesNode.add(d);</span>
+        }
+<span class="fc" id="L57">        root.set(&quot;devices&quot;, devicesNode);</span>
+
+<span class="fc" id="L59">        ArrayNode cablesNode = mapper.createArrayNode();</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">        for (Cable cable : topology.getCables()) {</span>
+<span class="fc" id="L61">            ObjectNode c = mapper.createObjectNode();</span>
+<span class="fc" id="L62">            c.put(&quot;id&quot;,          cable.getId());</span>
+<span class="fc" id="L63">            c.put(&quot;endpointAId&quot;, cable.getEndpointA().getId());</span>
+<span class="fc" id="L64">            c.put(&quot;endpointBId&quot;, cable.getEndpointB().getId());</span>
+<span class="fc" id="L65">            cablesNode.add(c);</span>
+        }
+<span class="fc" id="L67">        root.set(&quot;cables&quot;, cablesNode);</span>
+
+<span class="fc" id="L69">        mapper.writeValue(file, root);</span>
+<span class="fc" id="L70">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

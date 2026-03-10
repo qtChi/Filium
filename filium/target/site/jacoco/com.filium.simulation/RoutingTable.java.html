@@ -1,7 +1,158 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RoutingTable.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Filium</a> &gt; <a href="index.source.html" class="el_package">com.filium.simulation</a> &gt; <span class="el_source">RoutingTable.java</span></div><h1>RoutingTable.java</h1><pre class="source lang-java linenums">package com.filium.simulation;
 
-// TODO: Implement RoutingTable
-<span class="nc" id="L4">public class RoutingTable {</span>
+import com.filium.model.network.IPAddress;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
+
+/**
+ * Holds static routing table entries for a Router device.
+ * Each entry maps a destination network (CIDR notation) to a next-hop IP.
+ * Entries are evaluated in insertion order; the first match wins.
+ */
+public class RoutingTable {
+
+    /**
+     * Immutable routing table entry.
+     */
+    public static final class RouteEntry {
+        private final String network;
+        private final String cidrMask;
+        private final IPAddress nextHop;
+
+        /**
+         * @param network  destination network in dotted-decimal (e.g. &quot;192.168.1.0&quot;)
+         * @param cidrMask CIDR prefix length as string (e.g. &quot;24&quot;)
+         * @param nextHop  next-hop IP address; must not be null
+         */
+<span class="fc" id="L30">        public RouteEntry(String network, String cidrMask, IPAddress nextHop) {</span>
+<span class="fc bfc" id="L31" title="All 4 branches covered.">            if (network == null || network.isBlank()) {</span>
+<span class="fc" id="L32">                throw new IllegalArgumentException(&quot;Network must not be null or blank&quot;);</span>
+            }
+<span class="fc bfc" id="L34" title="All 4 branches covered.">            if (cidrMask == null || cidrMask.isBlank()) {</span>
+<span class="fc" id="L35">                throw new IllegalArgumentException(&quot;CIDR mask must not be null or blank&quot;);</span>
+            }
+<span class="fc bfc" id="L37" title="All 2 branches covered.">            if (nextHop == null) {</span>
+<span class="fc" id="L38">                throw new IllegalArgumentException(&quot;Next-hop must not be null&quot;);</span>
+            }
+<span class="fc" id="L40">            this.network  = network;</span>
+<span class="fc" id="L41">            this.cidrMask = cidrMask;</span>
+<span class="fc" id="L42">            this.nextHop  = nextHop;</span>
+<span class="fc" id="L43">        }</span>
+
+<span class="fc" id="L45">        public String getNetwork()  { return network; }</span>
+<span class="fc" id="L46">        public String getCidrMask() { return cidrMask; }</span>
+<span class="fc" id="L47">        public IPAddress getNextHop() { return nextHop; }</span>
+
+        @Override
+        public String toString() {
+<span class="fc" id="L51">            return network + &quot;/&quot; + cidrMask + &quot; -&gt; &quot; + nextHop;</span>
+        }
+    }
+
+    private final Map&lt;String, RouteEntry&gt; entries; // key = &quot;network/cidr&quot;
+
+    /** Constructs an empty RoutingTable. */
+<span class="fc" id="L58">    public RoutingTable() {</span>
+<span class="fc" id="L59">        this.entries = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L60">    }</span>
+
+    /**
+     * Adds or replaces a route entry.
+     *
+     * @param entry the entry to add; must not be null
+     * @throws IllegalArgumentException if entry is null
+     */
+    public void addRoute(RouteEntry entry) {
+<span class="fc bfc" id="L69" title="All 2 branches covered.">        if (entry == null) {</span>
+<span class="fc" id="L70">            throw new IllegalArgumentException(&quot;RouteEntry must not be null&quot;);</span>
+        }
+<span class="fc" id="L72">        entries.put(key(entry.getNetwork(), entry.getCidrMask()), entry);</span>
+<span class="fc" id="L73">    }</span>
+
+    /**
+     * Removes the route for the given network/cidr pair.
+     *
+     * @param network  the destination network
+     * @param cidrMask the CIDR prefix length string
+     * @return true if a route was removed, false if not found
+     */
+    public boolean removeRoute(String network, String cidrMask) {
+<span class="fc bfc" id="L83" title="All 2 branches covered.">        return entries.remove(key(network, cidrMask)) != null;</span>
+    }
+
+    /**
+     * Looks up the next-hop for a destination IP by checking each route entry
+     * using prefix matching. Returns the first match in insertion order.
+     *
+     * @param destination the destination IP to look up; must not be null
+     * @return Optional containing the next-hop IPAddress, or empty if no route found
+     * @throws IllegalArgumentException if destination is null
+     */
+    public Optional&lt;IPAddress&gt; lookup(IPAddress destination) {
+<span class="fc bfc" id="L95" title="All 2 branches covered.">        if (destination == null) {</span>
+<span class="fc" id="L96">            throw new IllegalArgumentException(&quot;Destination IP must not be null&quot;);</span>
+        }
+<span class="fc bfc" id="L98" title="All 2 branches covered.">        for (RouteEntry entry : entries.values()) {</span>
+<span class="fc" id="L99">            if (destination.isInSubnet(</span>
+<span class="fc" id="L100">                    new IPAddress(entry.getNetwork()),</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">                    cidrToMask(entry.getCidrMask()))) {</span>
+<span class="fc" id="L102">                return Optional.of(entry.getNextHop());</span>
+            }
+        }
+<span class="fc" id="L105">        return Optional.empty();</span>
+    }
+
+    /**
+     * Returns an unmodifiable view of all route entries.
+     *
+     * @return unmodifiable map of key to RouteEntry
+     */
+    public Map&lt;String, RouteEntry&gt; getEntries() {
+<span class="fc" id="L114">        return Collections.unmodifiableMap(entries);</span>
+    }
+
+    /**
+     * Returns the number of routes in this table.
+     *
+     * @return route count
+     */
+    public int size() {
+<span class="fc" id="L123">        return entries.size();</span>
+    }
+
+    /**
+     * Removes all route entries.
+     */
+    public void clear() {
+<span class="fc" id="L130">        entries.clear();</span>
+<span class="fc" id="L131">    }</span>
+
+    private String key(String network, String cidr) {
+<span class="fc" id="L134">        return network + &quot;/&quot; + cidr;</span>
+    }
+
+    /**
+     * Converts a CIDR prefix length string (e.g. &quot;24&quot;) to a
+     * dotted-decimal subnet mask (e.g. &quot;255.255.255.0&quot;).
+     */
+    private String cidrToMask(String cidr) {
+        int prefix;
+        try {
+<span class="fc" id="L144">            prefix = Integer.parseInt(cidr.trim());</span>
+<span class="pc" id="L145">        } catch (NumberFormatException e) {</span>
+<span class="nc" id="L146">            throw new IllegalArgumentException(&quot;Invalid CIDR prefix: &quot; + cidr);</span>
+        }
+<span class="pc bpc" id="L148" title="2 of 4 branches missed.">        if (prefix &lt; 0 || prefix &gt; 32) {</span>
+<span class="nc" id="L149">            throw new IllegalArgumentException(&quot;CIDR prefix out of range: &quot; + prefix);</span>
+        }
+<span class="pc bpc" id="L151" title="1 of 2 branches missed.">        int mask = prefix == 0 ? 0 : (0xFFFFFFFF &lt;&lt; (32 - prefix));</span>
+<span class="fc" id="L152">        return ((mask &gt;&gt; 24) &amp; 0xFF) + &quot;.&quot;</span>
+<span class="fc" id="L153">             + ((mask &gt;&gt; 16) &amp; 0xFF) + &quot;.&quot;</span>
+<span class="fc" id="L154">             + ((mask &gt;&gt;  8) &amp; 0xFF) + &quot;.&quot;</span>
+<span class="fc" id="L155">             + ( mask        &amp; 0xFF);</span>
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

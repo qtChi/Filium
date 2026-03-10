@@ -1,7 +1,86 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DeviceNode.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Filium</a> &gt; <a href="index.source.html" class="el_package">com.filium.ui.canvas</a> &gt; <span class="el_source">DeviceNode.java</span></div><h1>DeviceNode.java</h1><pre class="source lang-java linenums">package com.filium.ui.canvas;
 
-// TODO: Implement DeviceNode
-<span class="nc" id="L4">public class DeviceNode {</span>
+import com.filium.model.devices.Device;
+import javafx.scene.control.Label;
+import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
+import javafx.scene.text.TextAlignment;
 
+/**
+ * Visual node representing a single device on the NetworkCanvas.
+ * Wraps a Device and renders it as a labelled rectangle.
+ */
+public class DeviceNode extends StackPane {
+
+    public static final double NODE_WIDTH  = 72;
+    public static final double NODE_HEIGHT = 72;
+
+    private final Device device;
+    private final Rectangle background;
+    private final Label nameLabel;
+    private final Label typeLabel;
+    private boolean selected;
+
+<span class="fc" id="L26">    private static final Color COLOR_DEFAULT  = Color.web(&quot;#0F3460&quot;);</span>
+<span class="fc" id="L27">    private static final Color COLOR_SELECTED = Color.web(&quot;#E94560&quot;);</span>
+<span class="fc" id="L28">    private static final Color COLOR_BORDER   = Color.web(&quot;#00D4FF&quot;);</span>
+
+<span class="fc" id="L30">    public DeviceNode(Device device) {</span>
+<span class="fc" id="L31">        this.device = device;</span>
+<span class="fc" id="L32">        this.selected = false;</span>
+
+<span class="fc" id="L34">        background = new Rectangle(NODE_WIDTH, NODE_HEIGHT, COLOR_DEFAULT);</span>
+<span class="fc" id="L35">        background.setArcWidth(12);</span>
+<span class="fc" id="L36">        background.setArcHeight(12);</span>
+<span class="fc" id="L37">        background.setStroke(COLOR_BORDER);</span>
+<span class="fc" id="L38">        background.setStrokeWidth(1.5);</span>
+
+<span class="fc" id="L40">        typeLabel = new Label(device.getDeviceType().getDisplayName());</span>
+<span class="fc" id="L41">        typeLabel.setTextFill(Color.web(&quot;#A0A0B0&quot;));</span>
+<span class="fc" id="L42">        typeLabel.setFont(Font.font(9));</span>
+<span class="fc" id="L43">        typeLabel.setTextAlignment(TextAlignment.CENTER);</span>
+
+<span class="fc" id="L45">        nameLabel = new Label(device.getName());</span>
+<span class="fc" id="L46">        nameLabel.setTextFill(Color.web(&quot;#EAEAEA&quot;));</span>
+<span class="fc" id="L47">        nameLabel.setFont(Font.font(11));</span>
+<span class="fc" id="L48">        nameLabel.setTextAlignment(TextAlignment.CENTER);</span>
+<span class="fc" id="L49">        nameLabel.setWrapText(true);</span>
+<span class="fc" id="L50">        nameLabel.setMaxWidth(NODE_WIDTH - 8);</span>
+
+<span class="fc" id="L52">        javafx.scene.layout.VBox labels = new javafx.scene.layout.VBox(2, typeLabel, nameLabel);</span>
+<span class="fc" id="L53">        labels.setAlignment(javafx.geometry.Pos.CENTER);</span>
+
+<span class="fc" id="L55">        getChildren().addAll(background, labels);</span>
+<span class="fc" id="L56">        setLayoutX(device.getX());</span>
+<span class="fc" id="L57">        setLayoutY(device.getY());</span>
+
+<span class="fc" id="L59">        setPrefSize(NODE_WIDTH, NODE_HEIGHT);</span>
+<span class="fc" id="L60">        setMaxSize(NODE_WIDTH, NODE_HEIGHT);</span>
+<span class="fc" id="L61">    }</span>
+
+    /** Returns the underlying Device model object. */
+<span class="fc" id="L64">    public Device getDevice() { return device; }</span>
+
+    /** Marks this node as selected or deselected, updating visual style. */
+    public void setSelected(boolean selected) {
+<span class="fc" id="L68">        this.selected = selected;</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">        background.setFill(selected ? COLOR_SELECTED : COLOR_DEFAULT);</span>
+<span class="fc" id="L70">    }</span>
+
+    /** Returns true if this node is currently selected. */
+<span class="fc" id="L73">    public boolean isSelected() { return selected; }</span>
+
+    /** Syncs this node's layout position to the device model's x/y. */
+    public void syncPosition() {
+<span class="fc" id="L77">        setLayoutX(device.getX());</span>
+<span class="fc" id="L78">        setLayoutY(device.getY());</span>
+<span class="fc" id="L79">    }</span>
+
+    /** Updates the name label to reflect current device name. */
+    public void refreshName() {
+<span class="fc" id="L83">        nameLabel.setText(device.getName());</span>
+<span class="fc" id="L84">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,7 +1,81 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SimulationEvent.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Filium</a> &gt; <a href="index.source.html" class="el_package">com.filium.simulation</a> &gt; <span class="el_source">SimulationEvent.java</span></div><h1>SimulationEvent.java</h1><pre class="source lang-java linenums">package com.filium.simulation;
 
-// TODO: Implement SimulationEvent
-<span class="nc" id="L4">public class SimulationEvent {</span>
+import com.filium.model.devices.Device;
+import com.filium.packet.Packet;
 
+import java.util.Objects;
+import java.util.UUID;
+
+/**
+ * Immutable record of something that happened during simulation.
+ * Emitted by SimulationEngine and consumed by the UI log panel and
+ * packet animation layer.
+ */
+public final class SimulationEvent {
+
+    private final String id;
+    private final SimulationEventType type;
+    private final Device source;
+    private final Device destination;
+    private final Packet packet;
+    private final String message;
+    private final long timestamp;
+
+    /**
+     * Constructs a SimulationEvent.
+     *
+     * @param type        the kind of event; must not be null
+     * @param source      the originating device; may be null for system events
+     * @param destination the target device; may be null
+     * @param packet      the packet involved; may be null for non-packet events
+     * @param message     human-readable description; must not be null
+     * @throws IllegalArgumentException if type or message is null
+     */
+<span class="fc" id="L34">    public SimulationEvent(SimulationEventType type,</span>
+                           Device source,
+                           Device destination,
+                           Packet packet,
+                           String message) {
+<span class="fc bfc" id="L39" title="All 2 branches covered.">        if (type == null) {</span>
+<span class="fc" id="L40">            throw new IllegalArgumentException(&quot;SimulationEventType must not be null&quot;);</span>
+        }
+<span class="fc bfc" id="L42" title="All 2 branches covered.">        if (message == null) {</span>
+<span class="fc" id="L43">            throw new IllegalArgumentException(&quot;Message must not be null&quot;);</span>
+        }
+<span class="fc" id="L45">        this.id          = UUID.randomUUID().toString();</span>
+<span class="fc" id="L46">        this.type        = type;</span>
+<span class="fc" id="L47">        this.source      = source;</span>
+<span class="fc" id="L48">        this.destination = destination;</span>
+<span class="fc" id="L49">        this.packet      = packet;</span>
+<span class="fc" id="L50">        this.message     = message;</span>
+<span class="fc" id="L51">        this.timestamp   = System.currentTimeMillis();</span>
+<span class="fc" id="L52">    }</span>
+
+<span class="fc" id="L54">    public SimulationEventType getType()  { return type; }</span>
+<span class="fc" id="L55">    public Device getSource()             { return source; }</span>
+<span class="fc" id="L56">    public Device getDestination()        { return destination; }</span>
+<span class="fc" id="L57">    public Packet getPacket()             { return packet; }</span>
+<span class="fc" id="L58">    public String getMessage()            { return message; }</span>
+<span class="fc" id="L59">    public long getTimestamp()            { return timestamp; }</span>
+
+    @Override
+    public String toString() {
+<span class="fc" id="L63">        return &quot;SimulationEvent{type=&quot; + type</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">            + &quot;, src=&quot; + (source != null ? source.getName() : &quot;null&quot;)</span>
+<span class="pc bpc" id="L65" title="1 of 2 branches missed.">            + &quot;, dst=&quot; + (destination != null ? destination.getName() : &quot;null&quot;)</span>
+<span class="fc" id="L66">            + &quot;, msg=&quot; + message + &quot;}&quot;;</span>
+    }
+
+    @Override
+    public boolean equals(Object o) {
+<span class="fc bfc" id="L71" title="All 2 branches covered.">        if (this == o) return true;</span>
+<span class="pc bpc" id="L72" title="1 of 2 branches missed.">        if (!(o instanceof SimulationEvent other)) return false;</span>
+<span class="fc" id="L73">        return id.equals(other.id);</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="fc" id="L78">        return id.hashCode();</span>
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

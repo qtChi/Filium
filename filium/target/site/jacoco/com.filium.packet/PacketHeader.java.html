@@ -1,7 +1,188 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PacketHeader.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Filium</a> &gt; <a href="index.source.html" class="el_package">com.filium.packet</a> &gt; <span class="el_source">PacketHeader.java</span></div><h1>PacketHeader.java</h1><pre class="source lang-java linenums">package com.filium.packet;
 
-// TODO: Implement PacketHeader
-<span class="nc" id="L4">public class PacketHeader {</span>
+import com.filium.model.network.IPAddress;
+import com.filium.model.network.NetworkInterface;
+import java.util.Objects;
 
+/**
+ * Immutable value class representing the header fields shared by all packets.
+ * Holds source/destination IP and MAC addresses and a TTL counter.
+ * Every mutating operation returns a new instance — the original is never modified.
+ */
+public class PacketHeader {
+
+    private final IPAddress sourceIP;
+    private final IPAddress destinationIP;
+    private final String sourceMAC;
+    private final String destinationMAC;
+    private final int ttl;
+
+    /**
+     * Constructs a PacketHeader with all required fields.
+     *
+     * @param sourceIP       the sender's IP address
+     * @param destinationIP  the target IP address
+     * @param sourceMAC      the sender's MAC address in XX:XX:XX:XX:XX:XX format
+     * @param destinationMAC the target MAC address in XX:XX:XX:XX:XX:XX format
+     * @param ttl            time-to-live value; must be between 1 and 255 inclusive
+     * @throws IllegalArgumentException if any argument is null, MAC format is invalid,
+     *                                  or TTL is out of range
+     */
+<span class="fc" id="L31">    public PacketHeader(IPAddress sourceIP,</span>
+                        IPAddress destinationIP,
+                        String sourceMAC,
+                        String destinationMAC,
+                        int ttl) {
+<span class="fc bfc" id="L36" title="All 2 branches covered.">        if (sourceIP == null) {</span>
+<span class="fc" id="L37">            throw new IllegalArgumentException(&quot;Source IP must not be null&quot;);</span>
+        }
+<span class="fc bfc" id="L39" title="All 2 branches covered.">        if (destinationIP == null) {</span>
+<span class="fc" id="L40">            throw new IllegalArgumentException(&quot;Destination IP must not be null&quot;);</span>
+        }
+<span class="fc bfc" id="L42" title="All 4 branches covered.">        if (sourceMAC == null || !NetworkInterface.isValidMAC(sourceMAC)) {</span>
+<span class="fc" id="L43">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L44">                &quot;Invalid source MAC address: '&quot; + sourceMAC + &quot;'&quot;);</span>
+        }
+<span class="fc bfc" id="L46" title="All 4 branches covered.">        if (destinationMAC == null || !NetworkInterface.isValidMAC(destinationMAC)) {</span>
+<span class="fc" id="L47">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L48">                &quot;Invalid destination MAC address: '&quot; + destinationMAC + &quot;'&quot;);</span>
+        }
+<span class="fc bfc" id="L50" title="All 4 branches covered.">        if (ttl &lt; 1 || ttl &gt; 255) {</span>
+<span class="fc" id="L51">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L52">                &quot;TTL must be between 1 and 255, got: &quot; + ttl);</span>
+        }
+<span class="fc" id="L54">        this.sourceIP = sourceIP;</span>
+<span class="fc" id="L55">        this.destinationIP = destinationIP;</span>
+<span class="fc" id="L56">        this.sourceMAC = sourceMAC;</span>
+<span class="fc" id="L57">        this.destinationMAC = destinationMAC;</span>
+<span class="fc" id="L58">        this.ttl = ttl;</span>
+<span class="fc" id="L59">    }</span>
+
+    /**
+     * Returns the source IP address.
+     *
+     * @return source IPAddress
+     */
+    public IPAddress getSourceIP() {
+<span class="fc" id="L67">        return sourceIP;</span>
+    }
+
+    /**
+     * Returns the destination IP address.
+     *
+     * @return destination IPAddress
+     */
+    public IPAddress getDestinationIP() {
+<span class="fc" id="L76">        return destinationIP;</span>
+    }
+
+    /**
+     * Returns the source MAC address.
+     *
+     * @return source MAC string
+     */
+    public String getSourceMAC() {
+<span class="fc" id="L85">        return sourceMAC;</span>
+    }
+
+    /**
+     * Returns the destination MAC address.
+     *
+     * @return destination MAC string
+     */
+    public String getDestinationMAC() {
+<span class="fc" id="L94">        return destinationMAC;</span>
+    }
+
+    /**
+     * Returns the current TTL value.
+     *
+     * @return TTL integer between 1 and 255
+     */
+    public int getTtl() {
+<span class="fc" id="L103">        return ttl;</span>
+    }
+
+    /**
+     * Returns a new PacketHeader with TTL decremented by one.
+     * The TTL may reach 0 on the returned header — check {@link #isExpired()}.
+     *
+     * @return new PacketHeader with ttl - 1
+     * @throws IllegalStateException if TTL is already 0
+     */
+    public PacketHeader decrementTTL() {
+<span class="pc bpc" id="L114" title="1 of 2 branches missed.">        if (ttl &lt;= 0) {</span>
+<span class="nc" id="L115">            throw new IllegalStateException(&quot;Cannot decrement TTL that is already 0&quot;);</span>
+        }
+<span class="fc bfc" id="L117" title="All 2 branches covered.">        if (ttl == 1) {</span>
+<span class="fc" id="L118">            return new PacketHeaderExpired(sourceIP, destinationIP,</span>
+<span class="fc" id="L119">                sourceMAC, destinationMAC);</span>
+        }
+<span class="fc" id="L121">        return new PacketHeader(sourceIP, destinationIP,</span>
+<span class="fc" id="L122">            sourceMAC, destinationMAC, ttl - 1);</span>
+    }
+
+    /**
+     * Returns true if this header's TTL has reached zero, meaning the packet
+     * should be dropped and an ICMP TTL Exceeded message should be sent.
+     *
+     * @return true if TTL is 0
+     */
+    public boolean isExpired() {
+<span class="pc bpc" id="L132" title="1 of 2 branches missed.">        return ttl == 0;</span>
+    }
+
+    @Override
+    public boolean equals(Object o) {
+<span class="fc bfc" id="L137" title="All 2 branches covered.">        if (this == o) return true;</span>
+<span class="pc bpc" id="L138" title="1 of 2 branches missed.">        if (!(o instanceof PacketHeader other)) return false;</span>
+<span class="fc bfc" id="L139" title="All 2 branches covered.">        return ttl == other.ttl</span>
+<span class="fc bfc" id="L140" title="All 2 branches covered.">            &amp;&amp; sourceIP.equals(other.sourceIP)</span>
+<span class="fc bfc" id="L141" title="All 2 branches covered.">            &amp;&amp; destinationIP.equals(other.destinationIP)</span>
+<span class="fc bfc" id="L142" title="All 2 branches covered.">            &amp;&amp; sourceMAC.equals(other.sourceMAC)</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">            &amp;&amp; destinationMAC.equals(other.destinationMAC);</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="fc" id="L148">        return Objects.hash(sourceIP, destinationIP, sourceMAC, destinationMAC, ttl);</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="fc" id="L153">        return &quot;PacketHeader{src=&quot; + sourceIP + &quot; (&quot; + sourceMAC + &quot;)&quot; +</span>
+<span class="fc" id="L154">               &quot;, dst=&quot; + destinationIP + &quot; (&quot; + destinationMAC + &quot;)&quot; +</span>
+<span class="fc" id="L155">               &quot;, ttl=&quot; + ttl + &quot;}&quot;;</span>
+    }
+
+    /**
+     * Internal subclass representing a header whose TTL has reached zero.
+     * Overrides isExpired() to return true without storing TTL=0 in the
+     * public constructor (which validates TTL &gt;= 1).
+     */
+    private static final class PacketHeaderExpired extends PacketHeader {
+
+        private PacketHeaderExpired(IPAddress sourceIP, IPAddress destinationIP,
+                                    String sourceMAC, String destinationMAC) {
+            // Use TTL=1 to satisfy parent constructor validation,
+            // then override getTtl() and isExpired() below.
+<span class="fc" id="L169">            super(sourceIP, destinationIP, sourceMAC, destinationMAC, 1);</span>
+<span class="fc" id="L170">        }</span>
+
+        @Override
+        public int getTtl() {
+<span class="fc" id="L174">            return 0;</span>
+        }
+
+        @Override
+        public boolean isExpired() {
+<span class="fc" id="L179">            return true;</span>
+        }
+
+        @Override
+        public PacketHeader decrementTTL() {
+<span class="fc" id="L184">            throw new IllegalStateException(&quot;Cannot decrement TTL that is already 0&quot;);</span>
+        }
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

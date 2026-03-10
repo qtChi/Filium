@@ -1,7 +1,125 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Switch.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Filium</a> &gt; <a href="index.source.html" class="el_package">com.filium.model.devices</a> &gt; <span class="el_source">Switch.java</span></div><h1>Switch.java</h1><pre class="source lang-java linenums">package com.filium.model.devices;
 
-// TODO: Implement Switch
-<span class="nc" id="L4">public class Switch extends Device {</span>
+import com.filium.model.network.NetworkInterface;
+import com.filium.packet.Packet;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Represents a Layer 2 network switch. Extends Device.
+ * Learns source MAC addresses and associates them with the port they arrived on.
+ * Forwards frames to known destinations; floods to all ports for unknown MACs.
+ * Switching logic is delegated to the SimulationEngine.
+ */
+public class Switch extends Device {
+
+    public static final int MAX_PORTS = 16;
+
+    private final Map&lt;String, NetworkInterface&gt; macTable;
+    private final List&lt;NetworkInterface&gt; ports;
+
+    /**
+     * Constructs a new Switch with the given name.
+     *
+     * @param name the user-assigned label; must not be null
+     */
+    public Switch(String name) {
+<span class="fc" id="L31">        super(name, DeviceType.SWITCH);</span>
+<span class="fc" id="L32">        this.macTable = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L33">        this.ports = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L34">        this.ports.add(getNetworkInterface());</span>
+<span class="fc" id="L35">    }</span>
+
+    /**
+     * Adds a port (network interface) to this switch.
+     *
+     * @param port the interface to add; must not be null
+     * @throws IllegalArgumentException if port is null
+     * @throws IllegalStateException    if the switch already has MAX_PORTS ports
+     */
+    public void addPort(NetworkInterface port) {
+<span class="fc bfc" id="L45" title="All 2 branches covered.">        if (port == null) {</span>
+<span class="fc" id="L46">            throw new IllegalArgumentException(&quot;Port must not be null&quot;);</span>
+        }
+<span class="fc bfc" id="L48" title="All 2 branches covered.">        if (ports.size() &gt;= MAX_PORTS) {</span>
+<span class="fc" id="L49">            throw new IllegalStateException(</span>
+<span class="fc" id="L50">                &quot;Switch already has the maximum of &quot; + MAX_PORTS + &quot; ports&quot;);</span>
+        }
+<span class="fc" id="L52">        ports.add(port);</span>
+<span class="fc" id="L53">    }</span>
+
+    /**
+     * Returns an unmodifiable view of all ports on this switch.
+     *
+     * @return unmodifiable list of NetworkInterface
+     */
+    public List&lt;NetworkInterface&gt; getPorts() {
+<span class="fc" id="L61">        return Collections.unmodifiableList(ports);</span>
+    }
+
+    /**
+     * Learns a MAC address to port mapping.
+     *
+     * @param mac  the MAC address string; must not be null or blank
+     * @param port the port this MAC was learned on; must not be null
+     * @throws IllegalArgumentException if mac is null/blank or port is null
+     */
+    public void learnMAC(String mac, NetworkInterface port) {
+<span class="fc bfc" id="L72" title="All 4 branches covered.">        if (mac == null || mac.isBlank()) {</span>
+<span class="fc" id="L73">            throw new IllegalArgumentException(&quot;MAC address must not be null or blank&quot;);</span>
+        }
+<span class="fc bfc" id="L75" title="All 2 branches covered.">        if (port == null) {</span>
+<span class="fc" id="L76">            throw new IllegalArgumentException(&quot;Port must not be null&quot;);</span>
+        }
+<span class="fc" id="L78">        macTable.put(mac, port);</span>
+<span class="fc" id="L79">    }</span>
+
+    /**
+     * Looks up the port associated with a given MAC address.
+     *
+     * @param mac the MAC address to look up
+     * @return the associated NetworkInterface, or null if not found
+     */
+    public NetworkInterface lookupMAC(String mac) {
+<span class="fc" id="L88">        return macTable.get(mac);</span>
+    }
+
+    /**
+     * Returns an unmodifiable view of the MAC address table.
+     *
+     * @return unmodifiable map of MAC to NetworkInterface
+     */
+    public Map&lt;String, NetworkInterface&gt; getMacTable() {
+<span class="fc" id="L97">        return Collections.unmodifiableMap(macTable);</span>
+    }
+
+    /**
+     * Receives a packet. Switching logic is handled by the SimulationEngine.
+     *
+     * @param packet the incoming packet; must not be null
+     * @throws IllegalArgumentException if packet is null
+     */
+    @Override
+    public void receivePacket(Packet packet) {
+<span class="fc bfc" id="L108" title="All 2 branches covered.">        if (packet == null) {</span>
+<span class="fc" id="L109">            throw new IllegalArgumentException(&quot;Packet must not be null&quot;);</span>
+        }
+        // Forwarding logic is handled by SimulationEngine
+<span class="fc" id="L112">    }</span>
+
+    /**
+     * Resets this switch by flushing the MAC address table
+     * and clearing all additional ports, retaining only the base interface.
+     */
+    @Override
+    public void reset() {
+<span class="fc" id="L120">        macTable.clear();</span>
+<span class="fc" id="L121">        ports.clear();</span>
+<span class="fc" id="L122">        ports.add(getNetworkInterface());</span>
+<span class="fc" id="L123">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

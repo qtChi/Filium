@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.filium.model.devices.TestDeviceType
 -------------------------------------------------------------------------------
-Tests run: 31, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.047 s -- in com.filium.model.devices.TestDeviceType
+Tests run: 31, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.013 s -- in com.filium.model.devices.TestDeviceType

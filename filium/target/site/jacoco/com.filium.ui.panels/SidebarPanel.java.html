@@ -1,7 +1,109 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SidebarPanel.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Filium</a> &gt; <a href="index.source.html" class="el_package">com.filium.ui.panels</a> &gt; <span class="el_source">SidebarPanel.java</span></div><h1>SidebarPanel.java</h1><pre class="source lang-java linenums">package com.filium.ui.panels;
 
-// TODO: Implement SidebarPanel
-<span class="nc" id="L4">public class SidebarPanel {</span>
+import com.filium.model.devices.DeviceType;
+import com.filium.model.network.NetworkTopology;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.control.Label;
+import javafx.scene.control.Separator;
+import javafx.scene.control.Tooltip;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
 
+import java.util.function.BiConsumer;
+
+/**
+ * Left sidebar containing the device palette.
+ * Each device type is shown as a draggable tile.
+ * Notifies the CanvasController via onAddDevice callback.
+ */
+public class SidebarPanel {
+
+    private final NetworkTopology topology;
+    private final VBox root;
+
+    private BiConsumer&lt;DeviceType, double[]&gt; onAddDevice;
+
+<span class="fc" id="L30">    public SidebarPanel(NetworkTopology topology) {</span>
+<span class="fc" id="L31">        this.topology = topology;</span>
+
+<span class="fc" id="L33">        Label heading = new Label(&quot;DEVICES&quot;);</span>
+<span class="fc" id="L34">        heading.setTextFill(Color.web(&quot;#A0A0B0&quot;));</span>
+<span class="fc" id="L35">        heading.setFont(Font.font(10));</span>
+<span class="fc" id="L36">        heading.setPadding(new Insets(0, 0, 4, 0));</span>
+
+<span class="fc" id="L38">        root = new VBox(8);</span>
+<span class="fc" id="L39">        root.setPadding(new Insets(14, 10, 14, 10));</span>
+<span class="fc" id="L40">        root.setPrefWidth(120);</span>
+<span class="fc" id="L41">        root.setStyle(&quot;-fx-background-color: #1A1A2E; -fx-border-color: #2E2E4E;&quot;</span>
+                    + &quot; -fx-border-width: 0 1 0 0;&quot;);
+
+<span class="fc" id="L44">        root.getChildren().add(heading);</span>
+<span class="fc" id="L45">        root.getChildren().add(new Separator());</span>
+
+<span class="fc bfc" id="L47" title="All 2 branches covered.">        for (DeviceType type : DeviceType.values()) {</span>
+<span class="fc" id="L48">            root.getChildren().add(buildTile(type));</span>
+        }
+<span class="fc" id="L50">    }</span>
+
+<span class="fc" id="L52">    public Node getNode() { return root; }</span>
+
+    /** Callback fired when user clicks a tile; args are (DeviceType, [x, y]). */
+    public void setOnAddDevice(BiConsumer&lt;DeviceType, double[]&gt; handler) {
+<span class="fc" id="L56">        this.onAddDevice = handler;</span>
+<span class="fc" id="L57">    }</span>
+
+    // ─────────────────────────────────────────────────────────────────
+
+    private VBox buildTile(DeviceType type) {
+<span class="fc" id="L62">        Rectangle icon = new Rectangle(42, 42);</span>
+<span class="fc" id="L63">        icon.setArcWidth(8); icon.setArcHeight(8);</span>
+<span class="fc" id="L64">        icon.setFill(Color.web(tileColour(type)));</span>
+<span class="fc" id="L65">        icon.setStroke(Color.web(&quot;#00D4FF&quot;)); icon.setStrokeWidth(1);</span>
+
+<span class="fc" id="L67">        Label lbl = new Label(type.getDisplayName());</span>
+<span class="fc" id="L68">        lbl.setTextFill(Color.web(&quot;#CCCCDD&quot;));</span>
+<span class="fc" id="L69">        lbl.setFont(Font.font(10));</span>
+<span class="fc" id="L70">        lbl.setWrapText(true);</span>
+<span class="fc" id="L71">        lbl.setMaxWidth(100);</span>
+
+<span class="fc" id="L73">        VBox tile = new VBox(4, icon, lbl);</span>
+<span class="fc" id="L74">        tile.setAlignment(Pos.CENTER);</span>
+<span class="fc" id="L75">        tile.setPadding(new Insets(6));</span>
+<span class="fc" id="L76">        tile.setStyle(&quot;-fx-background-color: #0F1535; -fx-background-radius: 6;&quot;</span>
+                    + &quot; -fx-cursor: hand;&quot;);
+
+<span class="fc" id="L79">        Tooltip.install(tile, new Tooltip(&quot;Add &quot; + type.getDisplayName()));</span>
+
+<span class="fc" id="L81">        tile.setOnMouseEntered(e -&gt;</span>
+<span class="nc" id="L82">            tile.setStyle(&quot;-fx-background-color: #1E2050; -fx-background-radius: 6;&quot;</span>
+<span class="nc" id="L83">                        + &quot; -fx-cursor: hand;&quot;));</span>
+<span class="fc" id="L84">        tile.setOnMouseExited(e -&gt;</span>
+<span class="nc" id="L85">            tile.setStyle(&quot;-fx-background-color: #0F1535; -fx-background-radius: 6;&quot;</span>
+<span class="nc" id="L86">                        + &quot; -fx-cursor: hand;&quot;));</span>
+<span class="fc" id="L87">        tile.setOnMouseClicked(e -&gt; {</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">            if (onAddDevice != null) {</span>
+                // Place new device near the centre of the visible canvas
+<span class="nc" id="L90">                onAddDevice.accept(type, new double[]{300 + Math.random() * 200,</span>
+<span class="nc" id="L91">                                                       200 + Math.random() * 200});</span>
+            }
+<span class="nc" id="L93">        });</span>
+
+<span class="fc" id="L95">        return tile;</span>
+    }
+
+    private String tileColour(DeviceType type) {
+<span class="fc bfc" id="L99" title="All 6 branches covered.">        return switch (type) {</span>
+<span class="fc" id="L100">            case PC          -&gt; &quot;#0F3460&quot;;</span>
+<span class="fc" id="L101">            case ROUTER      -&gt; &quot;#16213E&quot;;</span>
+<span class="fc" id="L102">            case SWITCH      -&gt; &quot;#1A1A2E&quot;;</span>
+<span class="fc" id="L103">            case DNS_SERVER  -&gt; &quot;#2C003E&quot;;</span>
+<span class="fc" id="L104">            case DHCP_SERVER -&gt; &quot;#003E2C&quot;;</span>
+<span class="fc" id="L105">            case FIREWALL    -&gt; &quot;#3E1A00&quot;;</span>
+        };
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

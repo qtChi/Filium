@@ -1,7 +1,242 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CanvasController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Filium</a> &gt; <a href="index.source.html" class="el_package">com.filium.ui.canvas</a> &gt; <span class="el_source">CanvasController.java</span></div><h1>CanvasController.java</h1><pre class="source lang-java linenums">package com.filium.ui.canvas;
 
-// TODO: Implement CanvasController
-<span class="nc" id="L4">public class CanvasController {</span>
+import com.filium.model.devices.Device;
+import com.filium.model.devices.DeviceType;
+import com.filium.model.devices.PC;
+import com.filium.model.devices.Router;
+import com.filium.model.devices.Switch;
+import com.filium.model.devices.DNSServer;
+import com.filium.model.devices.DHCPServer;
+import com.filium.model.devices.Firewall;
+import com.filium.model.network.Cable;
+import com.filium.model.network.NetworkTopology;
+import com.filium.simulation.SimulationEngine;
+import com.filium.ui.dialogs.DeviceConfigDialog;
+import javafx.scene.Node;
+import javafx.scene.control.ScrollPane;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Consumer;
+
+/**
+ * Manages the interactive network canvas.
+ * Handles adding/removing devices, drawing cables, drag-to-move,
+ * single-click selection, and double-click configuration.
+ */
+public class CanvasController {
+
+    private final NetworkTopology topology;
+    private final SimulationEngine engine;
+    private final NetworkCanvas canvas;
+    private final ScrollPane scrollPane;
+
+<span class="nc" id="L34">    private final Map&lt;Device, DeviceNode&gt; deviceNodes = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L35">    private final Map&lt;Cable, CableEdge&gt;   cableEdges  = new HashMap&lt;&gt;();</span>
+
+<span class="nc" id="L37">    private DeviceNode selectedNode = null;</span>
+<span class="nc" id="L38">    private DeviceNode cableSourceNode = null;</span>
+<span class="nc" id="L39">    private boolean cableMode = false;</span>
+
+    private Consumer&lt;Device&gt; onDeviceSelected;
+
+    // Drag tracking
+    private double dragStartX, dragStartY;
+
+<span class="nc" id="L46">    public CanvasController(NetworkTopology topology, SimulationEngine engine) {</span>
+<span class="nc" id="L47">        this.topology = topology;</span>
+<span class="nc" id="L48">        this.engine   = engine;</span>
+<span class="nc" id="L49">        this.canvas   = new NetworkCanvas();</span>
+
+<span class="nc" id="L51">        scrollPane = new ScrollPane(canvas);</span>
+<span class="nc" id="L52">        scrollPane.setPannable(true);</span>
+<span class="nc" id="L53">        scrollPane.setFitToWidth(false);</span>
+<span class="nc" id="L54">        scrollPane.setFitToHeight(false);</span>
+<span class="nc" id="L55">        scrollPane.setStyle(&quot;-fx-background: #16213E; -fx-background-color: #16213E;&quot;);</span>
+<span class="nc" id="L56">        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);</span>
+<span class="nc" id="L57">        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);</span>
+
+        // Click on empty canvas deselects
+<span class="nc" id="L60">        canvas.setOnMouseClicked(e -&gt; {</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">            if (e.getTarget() == canvas) clearSelection();</span>
+<span class="nc" id="L62">        });</span>
+<span class="nc" id="L63">    }</span>
+
+    /** Returns the root node to embed in the scene. */
+<span class="nc" id="L66">    public Node getNode() { return scrollPane; }</span>
+
+    /** Sets the callback invoked when a device node is selected. */
+    public void setOnDeviceSelected(Consumer&lt;Device&gt; handler) {
+<span class="nc" id="L70">        this.onDeviceSelected = handler;</span>
+<span class="nc" id="L71">    }</span>
+
+    /** Enters or exits cable-draw mode. */
+    public void setCableMode(boolean enabled) {
+<span class="nc" id="L75">        cableMode = enabled;</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">        if (!enabled) cableSourceNode = null;</span>
+<span class="nc" id="L77">    }</span>
+
+<span class="nc" id="L79">    public boolean isCableMode() { return cableMode; }</span>
+
+    /**
+     * Adds a new device of the given type at the specified canvas coordinates.
+     */
+    public void addDevice(DeviceType type, double x, double y) {
+<span class="nc" id="L85">        Device device = createDevice(type, defaultName(type));</span>
+<span class="nc" id="L86">        device.setX(x);</span>
+<span class="nc" id="L87">        device.setY(y);</span>
+<span class="nc" id="L88">        topology.addDevice(device);</span>
+<span class="nc" id="L89">        addDeviceNode(device);</span>
+<span class="nc" id="L90">    }</span>
+
+    /**
+     * Removes the given device and all connected cables from the canvas and topology.
+     */
+    public void removeDevice(Device device) {
+<span class="nc" id="L96">        topology.getCablesForDevice(device).forEach(cable -&gt; {</span>
+<span class="nc" id="L97">            CableEdge edge = cableEdges.remove(cable);</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">            if (edge != null) canvas.getChildren().remove(edge);</span>
+<span class="nc" id="L99">        });</span>
+<span class="nc" id="L100">        topology.removeDevice(device);</span>
+<span class="nc" id="L101">        DeviceNode node = deviceNodes.remove(device);</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">        if (node != null) canvas.getChildren().remove(node);</span>
+<span class="nc bnc" id="L103" title="All 4 branches missed.">        if (selectedNode != null &amp;&amp; selectedNode.getDevice() == device) {</span>
+<span class="nc" id="L104">            selectedNode = null;</span>
+        }
+<span class="nc" id="L106">    }</span>
+
+    /** Clears the canvas and topology completely. */
+    public void clear() {
+<span class="nc" id="L110">        canvas.getChildren().clear();</span>
+<span class="nc" id="L111">        deviceNodes.clear();</span>
+<span class="nc" id="L112">        cableEdges.clear();</span>
+<span class="nc" id="L113">        topology.clear();</span>
+<span class="nc" id="L114">        selectedNode = null;</span>
+<span class="nc" id="L115">        cableSourceNode = null;</span>
+<span class="nc" id="L116">    }</span>
+
+    /** Rebuilds the canvas from the current topology state (after load). */
+    public void reload() {
+<span class="nc" id="L120">        canvas.getChildren().clear();</span>
+<span class="nc" id="L121">        deviceNodes.clear();</span>
+<span class="nc" id="L122">        cableEdges.clear();</span>
+<span class="nc" id="L123">        selectedNode = null;</span>
+
+<span class="nc bnc" id="L125" title="All 2 branches missed.">        for (Device d : topology.getDevices()) {</span>
+<span class="nc" id="L126">            addDeviceNode(d);</span>
+        }
+<span class="nc bnc" id="L128" title="All 2 branches missed.">        for (Cable c : topology.getCables()) {</span>
+<span class="nc" id="L129">            DeviceNode a = deviceNodes.get(c.getEndpointA());</span>
+<span class="nc" id="L130">            DeviceNode b = deviceNodes.get(c.getEndpointB());</span>
+<span class="nc bnc" id="L131" title="All 4 branches missed.">            if (a != null &amp;&amp; b != null) addCableEdge(c, a, b);</span>
+        }
+<span class="nc" id="L133">    }</span>
+
+    // ─────────────────────────────────────────────────────────────────
+    // Internal helpers
+    // ─────────────────────────────────────────────────────────────────
+
+    private void addDeviceNode(Device device) {
+<span class="nc" id="L140">        DeviceNode node = new DeviceNode(device);</span>
+
+<span class="nc" id="L142">        node.setOnMouseClicked(e -&gt; {</span>
+<span class="nc" id="L143">            e.consume();</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">            if (cableMode) {</span>
+<span class="nc" id="L145">                handleCableModeClick(node);</span>
+<span class="nc" id="L146">            } else {</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">                if (e.getClickCount() == 2) {</span>
+<span class="nc" id="L148">                    openConfigDialog(device);</span>
+<span class="nc" id="L149">                } else {</span>
+<span class="nc" id="L150">                    selectNode(node);</span>
+                }
+            }
+<span class="nc" id="L153">        });</span>
+
+<span class="nc" id="L155">        node.setOnMousePressed(e -&gt; {</span>
+<span class="nc" id="L156">            dragStartX = e.getSceneX() - node.getLayoutX();</span>
+<span class="nc" id="L157">            dragStartY = e.getSceneY() - node.getLayoutY();</span>
+<span class="nc" id="L158">        });</span>
+
+<span class="nc" id="L160">        node.setOnMouseDragged(e -&gt; {</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">            if (!cableMode) {</span>
+<span class="nc" id="L162">                double nx = e.getSceneX() - dragStartX;</span>
+<span class="nc" id="L163">                double ny = e.getSceneY() - dragStartY;</span>
+<span class="nc" id="L164">                node.setLayoutX(nx);</span>
+<span class="nc" id="L165">                node.setLayoutY(ny);</span>
+<span class="nc" id="L166">                device.setX(nx);</span>
+<span class="nc" id="L167">                device.setY(ny);</span>
+            }
+<span class="nc" id="L169">        });</span>
+
+<span class="nc" id="L171">        deviceNodes.put(device, node);</span>
+<span class="nc" id="L172">        canvas.getChildren().add(node);</span>
+<span class="nc" id="L173">    }</span>
+
+    private void addCableEdge(Cable cable, DeviceNode a, DeviceNode b) {
+<span class="nc" id="L176">        CableEdge edge = new CableEdge(cable, a, b);</span>
+<span class="nc" id="L177">        cableEdges.put(cable, edge);</span>
+        // Add edges behind nodes
+<span class="nc" id="L179">        canvas.getChildren().add(0, edge);</span>
+<span class="nc" id="L180">    }</span>
+
+    private void handleCableModeClick(DeviceNode node) {
+<span class="nc bnc" id="L183" title="All 2 branches missed.">        if (cableSourceNode == null) {</span>
+<span class="nc" id="L184">            cableSourceNode = node;</span>
+<span class="nc" id="L185">            node.setSelected(true);</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">        } else if (cableSourceNode == node) {</span>
+<span class="nc" id="L187">            cableSourceNode.setSelected(false);</span>
+<span class="nc" id="L188">            cableSourceNode = null;</span>
+<span class="nc" id="L189">        } else {</span>
+<span class="nc" id="L190">            Cable cable = new Cable(cableSourceNode.getDevice(), node.getDevice());</span>
+<span class="nc" id="L191">            topology.addCable(cable);</span>
+<span class="nc" id="L192">            addCableEdge(cable, cableSourceNode, node);</span>
+<span class="nc" id="L193">            cableSourceNode.setSelected(false);</span>
+<span class="nc" id="L194">            cableSourceNode = null;</span>
+        }
+<span class="nc" id="L196">    }</span>
+
+    private void selectNode(DeviceNode node) {
+<span class="nc" id="L199">        clearSelection();</span>
+<span class="nc" id="L200">        selectedNode = node;</span>
+<span class="nc" id="L201">        node.setSelected(true);</span>
+<span class="nc bnc" id="L202" title="All 2 branches missed.">        if (onDeviceSelected != null) {</span>
+<span class="nc" id="L203">            onDeviceSelected.accept(node.getDevice());</span>
+        }
+<span class="nc" id="L205">    }</span>
+
+    private void clearSelection() {
+<span class="nc bnc" id="L208" title="All 2 branches missed.">        if (selectedNode != null) {</span>
+<span class="nc" id="L209">            selectedNode.setSelected(false);</span>
+<span class="nc" id="L210">            selectedNode = null;</span>
+        }
+<span class="nc bnc" id="L212" title="All 2 branches missed.">        if (onDeviceSelected != null) {</span>
+<span class="nc" id="L213">            onDeviceSelected.accept(null);</span>
+        }
+<span class="nc" id="L215">    }</span>
+
+    private void openConfigDialog(Device device) {
+<span class="nc" id="L218">        DeviceConfigDialog dialog = new DeviceConfigDialog(device);</span>
+<span class="nc" id="L219">        dialog.showAndWait().ifPresent(updated -&gt; {</span>
+<span class="nc" id="L220">            DeviceNode node = deviceNodes.get(device);</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">            if (node != null) node.refreshName();</span>
+<span class="nc" id="L222">        });</span>
+<span class="nc" id="L223">    }</span>
+
+    private Device createDevice(DeviceType type, String name) {
+<span class="nc bnc" id="L226" title="All 6 branches missed.">        return switch (type) {</span>
+<span class="nc" id="L227">            case PC          -&gt; new PC(name);</span>
+<span class="nc" id="L228">            case ROUTER      -&gt; new Router(name);</span>
+<span class="nc" id="L229">            case SWITCH      -&gt; new Switch(name);</span>
+<span class="nc" id="L230">            case DNS_SERVER  -&gt; new DNSServer(name);</span>
+<span class="nc" id="L231">            case DHCP_SERVER -&gt; new DHCPServer(name);</span>
+<span class="nc" id="L232">            case FIREWALL    -&gt; new Firewall(name);</span>
+        };
+    }
+
+    private String defaultName(DeviceType type) {
+<span class="nc" id="L237">        long count = topology.getDevices().stream()</span>
+<span class="nc bnc" id="L238" title="All 2 branches missed.">            .filter(d -&gt; d.getDeviceType() == type).count();</span>
+<span class="nc" id="L239">        return type.getDisplayName() + &quot;-&quot; + (count + 1);</span>
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

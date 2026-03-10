@@ -4,6 +4,7 @@ import com.filium.model.devices.Device;
 import com.filium.packet.Packet;
 
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Immutable record of something that happened during simulation.
@@ -12,6 +13,7 @@ import java.util.Objects;
  */
 public final class SimulationEvent {
 
+    private final String id;
     private final SimulationEventType type;
     private final Device source;
     private final Device destination;
@@ -40,6 +42,7 @@ public final class SimulationEvent {
         if (message == null) {
             throw new IllegalArgumentException("Message must not be null");
         }
+        this.id          = UUID.randomUUID().toString();
         this.type        = type;
         this.source      = source;
         this.destination = destination;
@@ -67,16 +70,11 @@ public final class SimulationEvent {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof SimulationEvent other)) return false;
-        return timestamp == other.timestamp
-            && type == other.type
-            && Objects.equals(source, other.source)
-            && Objects.equals(destination, other.destination)
-            && Objects.equals(packet, other.packet)
-            && message.equals(other.message);
+        return id.equals(other.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(type, source, destination, packet, message, timestamp);
+        return id.hashCode();
     }
 }

@@ -32,6 +32,7 @@ public class PropertiesPanel {
     private final Label macLabel;
 
     private Device currentDevice;
+    private java.util.function.Consumer<Device> onDeviceChanged;
 
     public PropertiesPanel() {
         heading = new Label("Properties");
@@ -81,6 +82,11 @@ public class PropertiesPanel {
 
     public Node getNode() { return root; }
 
+    /** Called whenever a device property is committed; use to refresh the canvas node. */
+    public void setOnDeviceChanged(java.util.function.Consumer<Device> handler) {
+        this.onDeviceChanged = handler;
+    }
+
     /** Populates the panel with the given device's data, or clears if null. */
     public void showDevice(Device device) {
         this.currentDevice = device;
@@ -117,6 +123,7 @@ public class PropertiesPanel {
         if (!v.isEmpty()) {
             currentDevice.setName(v);
             heading.setText(v);
+            if (onDeviceChanged != null) onDeviceChanged.accept(currentDevice);
         }
     }
 

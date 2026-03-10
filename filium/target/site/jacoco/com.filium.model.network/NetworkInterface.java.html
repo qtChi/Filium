@@ -1,7 +1,174 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NetworkInterface.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Filium</a> &gt; <a href="index.source.html" class="el_package">com.filium.model.network</a> &gt; <span class="el_source">NetworkInterface.java</span></div><h1>NetworkInterface.java</h1><pre class="source lang-java linenums">package com.filium.model.network;
 
-// TODO: Implement NetworkInterface
-<span class="nc" id="L4">public class NetworkInterface {</span>
+import java.util.Objects;
+import java.util.Random;
 
+/**
+ * Represents a network interface card (NIC) on a device.
+ * Holds IP address, subnet mask, default gateway, and MAC address.
+ * A device may be unconfigured (no IP assigned) or fully configured.
+ */
+public class NetworkInterface {
+
+    private static final String DEFAULT_SUBNET_MASK = &quot;255.255.255.0&quot;;
+<span class="fc" id="L14">    private static final Random RANDOM = new Random();</span>
+
+    private final String macAddress;
+    private IPAddress ipAddress;
+    private String subnetMask;
+    private IPAddress defaultGateway;
+
+    /**
+     * Constructs a new NetworkInterface with an auto-generated MAC address.
+     * IP address and gateway are null until explicitly configured.
+     */
+<span class="fc" id="L25">    public NetworkInterface() {</span>
+<span class="fc" id="L26">        this.macAddress = generateMAC();</span>
+<span class="fc" id="L27">        this.subnetMask = DEFAULT_SUBNET_MASK;</span>
+<span class="fc" id="L28">        this.ipAddress = null;</span>
+<span class="fc" id="L29">        this.defaultGateway = null;</span>
+<span class="fc" id="L30">    }</span>
+
+    /**
+     * Constructs a NetworkInterface with a specific MAC address.
+     * Useful for testing and deserialization.
+     *
+     * @param macAddress the MAC address string in XX:XX:XX:XX:XX:XX format
+     * @throws IllegalArgumentException if the MAC address format is invalid
+     */
+<span class="fc" id="L39">    public NetworkInterface(String macAddress) {</span>
+<span class="fc bfc" id="L40" title="All 2 branches covered.">        if (!isValidMAC(macAddress)) {</span>
+<span class="fc" id="L41">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L42">                &quot;Invalid MAC address format: '&quot; + macAddress + &quot;'. Expected XX:XX:XX:XX:XX:XX.&quot;);</span>
+        }
+<span class="fc" id="L44">        this.macAddress = macAddress;</span>
+<span class="fc" id="L45">        this.subnetMask = DEFAULT_SUBNET_MASK;</span>
+<span class="fc" id="L46">        this.ipAddress = null;</span>
+<span class="fc" id="L47">        this.defaultGateway = null;</span>
+<span class="fc" id="L48">    }</span>
+
+    /**
+     * Returns the MAC address of this interface.
+     *
+     * @return MAC address string in XX:XX:XX:XX:XX:XX format
+     */
+    public String getMacAddress() {
+<span class="fc" id="L56">        return macAddress;</span>
+    }
+
+    /**
+     * Returns the assigned IP address, or null if not configured.
+     *
+     * @return IPAddress or null
+     */
+    public IPAddress getIpAddress() {
+<span class="fc" id="L65">        return ipAddress;</span>
+    }
+
+    /**
+     * Sets the IP address on this interface.
+     *
+     * @param ipAddress the IP address to assign; null clears the configuration
+     */
+    public void setIpAddress(IPAddress ipAddress) {
+<span class="fc" id="L74">        this.ipAddress = ipAddress;</span>
+<span class="fc" id="L75">    }</span>
+
+    /**
+     * Returns the subnet mask.
+     *
+     * @return subnet mask in dotted-decimal format; default is &quot;255.255.255.0&quot;
+     */
+    public String getSubnetMask() {
+<span class="fc" id="L83">        return subnetMask;</span>
+    }
+
+    /**
+     * Sets the subnet mask.
+     *
+     * @param subnetMask dotted-decimal subnet mask string
+     * @throws IllegalArgumentException if subnetMask is null or blank
+     */
+    public void setSubnetMask(String subnetMask) {
+<span class="fc bfc" id="L93" title="All 4 branches covered.">        if (subnetMask == null || subnetMask.isBlank()) {</span>
+<span class="fc" id="L94">            throw new IllegalArgumentException(&quot;Subnet mask must not be null or blank&quot;);</span>
+        }
+<span class="fc" id="L96">        this.subnetMask = subnetMask;</span>
+<span class="fc" id="L97">    }</span>
+
+    /**
+     * Returns the default gateway IP address, or null if not configured.
+     *
+     * @return IPAddress of the gateway, or null
+     */
+    public IPAddress getDefaultGateway() {
+<span class="fc" id="L105">        return defaultGateway;</span>
+    }
+
+    /**
+     * Sets the default gateway IP address.
+     *
+     * @param defaultGateway the gateway IP; null clears the gateway
+     */
+    public void setDefaultGateway(IPAddress defaultGateway) {
+<span class="fc" id="L114">        this.defaultGateway = defaultGateway;</span>
+<span class="fc" id="L115">    }</span>
+
+    /**
+     * Returns true if this interface has an IP address assigned.
+     *
+     * @return true if ipAddress is not null
+     */
+    public boolean isConfigured() {
+<span class="fc bfc" id="L123" title="All 2 branches covered.">        return ipAddress != null;</span>
+    }
+
+    /**
+     * Generates a random valid MAC address string in XX:XX:XX:XX:XX:XX format.
+     * The first octet has the locally administered bit set and multicast bit cleared,
+     * which is conventional for generated/virtual MAC addresses.
+     *
+     * @return a randomly generated MAC address string
+     */
+    public static String generateMAC() {
+<span class="fc" id="L134">        byte[] bytes = new byte[6];</span>
+<span class="fc" id="L135">        RANDOM.nextBytes(bytes);</span>
+        // Set locally administered bit, clear multicast bit on first octet
+<span class="fc" id="L137">        bytes[0] = (byte) ((bytes[0] &amp; 0xFE) | 0x02);</span>
+<span class="fc" id="L138">        return String.format(&quot;%02X:%02X:%02X:%02X:%02X:%02X&quot;,</span>
+<span class="fc" id="L139">            bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5]);</span>
+    }
+
+    /**
+     * Validates that a MAC address string matches the XX:XX:XX:XX:XX:XX format,
+     * where each XX is a hexadecimal byte (case-insensitive).
+     *
+     * @param mac the MAC address string to validate
+     * @return true if the format is valid
+     */
+    public static boolean isValidMAC(String mac) {
+<span class="fc bfc" id="L150" title="All 2 branches covered.">        if (mac == null) return false;</span>
+<span class="fc" id="L151">        return mac.matches(&quot;^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$&quot;);</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="fc" id="L156">        return &quot;NetworkInterface{mac=&quot; + macAddress +</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">               &quot;, ip=&quot; + (ipAddress != null ? ipAddress : &quot;unset&quot;) +</span>
+<span class="fc" id="L158">               &quot;, mask=&quot; + subnetMask +</span>
+<span class="fc bfc" id="L159" title="All 2 branches covered.">               &quot;, gw=&quot; + (defaultGateway != null ? defaultGateway : &quot;unset&quot;) + &quot;}&quot;;</span>
+    }
+
+    @Override
+    public boolean equals(Object o) {
+<span class="fc bfc" id="L164" title="All 2 branches covered.">        if (this == o) return true;</span>
+<span class="pc bpc" id="L165" title="1 of 2 branches missed.">        if (!(o instanceof NetworkInterface other)) return false;</span>
+<span class="fc" id="L166">        return macAddress.equals(other.macAddress);</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="fc" id="L171">        return Objects.hash(macAddress);</span>
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

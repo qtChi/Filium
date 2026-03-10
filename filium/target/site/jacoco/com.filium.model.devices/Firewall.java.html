@@ -1,7 +1,215 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Firewall.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Filium</a> &gt; <a href="index.source.html" class="el_package">com.filium.model.devices</a> &gt; <span class="el_source">Firewall.java</span></div><h1>Firewall.java</h1><pre class="source lang-java linenums">package com.filium.model.devices;
 
-// TODO: Implement Firewall
-<span class="nc" id="L4">public class Firewall extends Device {</span>
+import com.filium.packet.Packet;
+import com.filium.packet.PacketType;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+
+/**
+ * Represents a stateless packet-filtering firewall. Extends Device.
+ * Maintains an ordered list of rules evaluated top-to-bottom.
+ * Each rule matches on source IP, destination IP, destination port,
+ * and protocol. The first matching rule determines the verdict.
+ * If no rule matches, the default policy applies.
+ */
+public class Firewall extends Device {
+
+    /**
+     * Immutable record representing a single firewall rule.
+     * Null fields act as wildcards — they match any value.
+     */
+    public static final class FirewallRule {
+
+        private final String srcIP;
+        private final String dstIP;
+        private final int dstPort;
+        private final PacketType protocol;
+        private final boolean allow;
+
+        /**
+         * Constructs a FirewallRule.
+         *
+         * @param srcIP    source IP to match, or null for any
+         * @param dstIP    destination IP to match, or null for any
+         * @param dstPort  destination port to match, or -1 for any
+         * @param protocol packet type to match, or null for any
+         * @param allow    true to allow matching packets, false to deny
+         */
+<span class="fc" id="L41">        public FirewallRule(String srcIP, String dstIP,</span>
+                            int dstPort, PacketType protocol, boolean allow) {
+<span class="fc" id="L43">            this.srcIP = srcIP;</span>
+<span class="fc" id="L44">            this.dstIP = dstIP;</span>
+<span class="fc" id="L45">            this.dstPort = dstPort;</span>
+<span class="fc" id="L46">            this.protocol = protocol;</span>
+<span class="fc" id="L47">            this.allow = allow;</span>
+<span class="fc" id="L48">        }</span>
+
+<span class="fc" id="L50">        public String getSrcIP()        { return srcIP; }</span>
+<span class="fc" id="L51">        public String getDstIP()        { return dstIP; }</span>
+<span class="fc" id="L52">        public int getDstPort()         { return dstPort; }</span>
+<span class="fc" id="L53">        public PacketType getProtocol() { return protocol; }</span>
+<span class="fc" id="L54">        public boolean isAllow()        { return allow; }</span>
+
+        /**
+         * Returns true if this rule matches the given packet.
+         * Null fields in the rule act as wildcards.
+         */
+        public boolean matches(Packet packet) {
+<span class="fc bfc" id="L61" title="All 2 branches covered.">            if (srcIP != null &amp;&amp;</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">                !srcIP.equals(packet.getHeader().getSourceIP().getAddress())) {</span>
+<span class="fc" id="L63">                return false;</span>
+            }
+<span class="fc bfc" id="L65" title="All 2 branches covered.">            if (dstIP != null &amp;&amp;</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">                !dstIP.equals(packet.getHeader().getDestinationIP().getAddress())) {</span>
+<span class="fc" id="L67">                return false;</span>
+            }
+<span class="fc bfc" id="L69" title="All 4 branches covered.">            if (protocol != null &amp;&amp; protocol != packet.getType()) {</span>
+<span class="fc" id="L70">                return false;</span>
+            }
+<span class="fc" id="L72">            return true;</span>
+        }
+
+        @Override
+        public boolean equals(Object o) {
+<span class="fc bfc" id="L77" title="All 2 branches covered.">            if (this == o) return true;</span>
+<span class="pc bpc" id="L78" title="1 of 2 branches missed.">            if (!(o instanceof FirewallRule r)) return false;</span>
+<span class="pc bpc" id="L79" title="1 of 2 branches missed.">            return dstPort == r.dstPort</span>
+<span class="fc bfc" id="L80" title="All 2 branches covered.">                &amp;&amp; allow == r.allow</span>
+<span class="pc bpc" id="L81" title="1 of 2 branches missed.">                &amp;&amp; Objects.equals(srcIP, r.srcIP)</span>
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">                &amp;&amp; Objects.equals(dstIP, r.dstIP)</span>
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">                &amp;&amp; protocol == r.protocol;</span>
+        }
+
+        @Override
+        public int hashCode() {
+<span class="fc" id="L88">            return Objects.hash(srcIP, dstIP, dstPort, protocol, allow);</span>
+        }
+
+        @Override
+        public String toString() {
+<span class="fc" id="L93">            return &quot;FirewallRule{src=&quot; + srcIP + &quot;, dst=&quot; + dstIP</span>
+<span class="fc" id="L94">                + &quot;, port=&quot; + dstPort + &quot;, proto=&quot; + protocol</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">                + &quot;, &quot; + (allow ? &quot;ALLOW&quot; : &quot;DENY&quot;) + &quot;}&quot;;</span>
+        }
+    }
+
+    private final List&lt;FirewallRule&gt; rules;
+    private boolean defaultAllow;
+
+    /**
+     * Constructs a new Firewall with the given name.
+     * Default policy is DENY (defaultAllow = false).
+     *
+     * @param name the user-assigned label; must not be null
+     */
+    public Firewall(String name) {
+<span class="fc" id="L109">        super(name, DeviceType.FIREWALL);</span>
+<span class="fc" id="L110">        this.rules = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L111">        this.defaultAllow = false;</span>
+<span class="fc" id="L112">    }</span>
+
+    /**
+     * Appends a rule to the end of the rule list.
+     *
+     * @param rule the rule to add; must not be null
+     * @throws IllegalArgumentException if rule is null
+     */
+    public void addRule(FirewallRule rule) {
+<span class="fc bfc" id="L121" title="All 2 branches covered.">        if (rule == null) {</span>
+<span class="fc" id="L122">            throw new IllegalArgumentException(&quot;FirewallRule must not be null&quot;);</span>
+        }
+<span class="fc" id="L124">        rules.add(rule);</span>
+<span class="fc" id="L125">    }</span>
+
+    /**
+     * Removes the rule at the given index.
+     *
+     * @param index the zero-based index of the rule to remove
+     * @throws IndexOutOfBoundsException if index is out of range
+     */
+    public void removeRule(int index) {
+<span class="fc bfc" id="L134" title="All 4 branches covered.">        if (index &lt; 0 || index &gt;= rules.size()) {</span>
+<span class="fc" id="L135">            throw new IndexOutOfBoundsException(</span>
+<span class="fc" id="L136">                &quot;Rule index &quot; + index + &quot; is out of range [0, &quot; + rules.size() + &quot;)&quot;);</span>
+        }
+<span class="fc" id="L138">        rules.remove(index);</span>
+<span class="fc" id="L139">    }</span>
+
+    /**
+     * Returns an unmodifiable view of the rule list.
+     *
+     * @return unmodifiable list of FirewallRule
+     */
+    public List&lt;FirewallRule&gt; getRules() {
+<span class="fc" id="L147">        return Collections.unmodifiableList(rules);</span>
+    }
+
+    /**
+     * Returns the default allow policy.
+     *
+     * @return true if unmatched packets are allowed, false if denied
+     */
+    public boolean isDefaultAllow() {
+<span class="fc" id="L156">        return defaultAllow;</span>
+    }
+
+    /**
+     * Sets the default policy for packets that match no rule.
+     *
+     * @param defaultAllow true to allow unmatched packets, false to deny
+     */
+    public void setDefaultAllow(boolean defaultAllow) {
+<span class="fc" id="L165">        this.defaultAllow = defaultAllow;</span>
+<span class="fc" id="L166">    }</span>
+
+    /**
+     * Evaluates a packet against the ordered rule list.
+     * Returns the decision of the first matching rule.
+     * Returns the default policy if no rule matches.
+     *
+     * @param packet the packet to evaluate; must not be null
+     * @return true if the packet should be allowed, false if it should be dropped
+     * @throws IllegalArgumentException if packet is null
+     */
+    public boolean evaluate(Packet packet) {
+<span class="fc bfc" id="L178" title="All 2 branches covered.">        if (packet == null) {</span>
+<span class="fc" id="L179">            throw new IllegalArgumentException(&quot;Packet must not be null&quot;);</span>
+        }
+<span class="fc bfc" id="L181" title="All 2 branches covered.">        for (FirewallRule rule : rules) {</span>
+<span class="fc bfc" id="L182" title="All 2 branches covered.">            if (rule.matches(packet)) {</span>
+<span class="fc" id="L183">                return rule.isAllow();</span>
+            }
+        }
+<span class="fc" id="L186">        return defaultAllow;</span>
+    }
+
+    /**
+     * Receives a packet and applies firewall evaluation.
+     * Allowed packets pass through; denied packets are silently dropped.
+     *
+     * @param packet the incoming packet; must not be null
+     * @throws IllegalArgumentException if packet is null
+     */
+    @Override
+    public void receivePacket(Packet packet) {
+<span class="fc bfc" id="L198" title="All 2 branches covered.">        if (packet == null) {</span>
+<span class="fc" id="L199">            throw new IllegalArgumentException(&quot;Packet must not be null&quot;);</span>
+        }
+<span class="fc" id="L201">        evaluate(packet);</span>
+        // Forwarding of allowed packets is handled by SimulationEngine
+<span class="fc" id="L203">    }</span>
+
+    /**
+     * Resets this firewall by clearing all rules and
+     * restoring the default deny policy.
+     */
+    @Override
+    public void reset() {
+<span class="fc" id="L211">        rules.clear();</span>
+<span class="fc" id="L212">        defaultAllow = false;</span>
+<span class="fc" id="L213">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

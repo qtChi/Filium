@@ -1,7 +1,141 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FiliumApp.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Filium</a> &gt; <a href="index.source.html" class="el_package">com.filium.app</a> &gt; <span class="el_source">FiliumApp.java</span></div><h1>FiliumApp.java</h1><pre class="source lang-java linenums">package com.filium.app;
 
-// TODO: Implement FiliumApp
-<span class="nc" id="L4">public class FiliumApp {</span>
+import com.filium.model.network.NetworkTopology;
+import com.filium.simulation.ARPTable;
+import com.filium.simulation.SimulationClock;
+import com.filium.simulation.SimulationEngine;
+import com.filium.simulation.protocols.*;
+import com.filium.ui.canvas.CanvasController;
+import com.filium.ui.panels.PropertiesPanel;
+import com.filium.ui.panels.SidebarPanel;
+import com.filium.ui.panels.SimulationLogPanel;
+import com.filium.ui.panels.ToolbarPanel;
+import javafx.animation.AnimationTimer;
+import javafx.application.Application;
+import javafx.scene.Scene;
+import javafx.scene.layout.BorderPane;
+import javafx.stage.Stage;
 
+/**
+ * JavaFX Application root for Filium.
+ * Wires together topology, simulation engine, UI panels, and the
+ * AnimationTimer that drives the engine tick loop.
+ */
+<span class="nc" id="L24">public class FiliumApp extends Application {</span>
+
+    public static final String APP_TITLE  = &quot;Filium — Network Simulator&quot;;
+    public static final double MIN_WIDTH  = 1100;
+    public static final double MIN_HEIGHT = 720;
+
+    // Nanoseconds between ticks: ~20 ticks/sec at DEFAULT_SPEED 1.0
+    private static final long TICK_INTERVAL_NS = 50_000_000L;
+
+    private SimulationEngine engine;
+    private SimulationClock  clock;
+    private AnimationTimer   tickTimer;
+
+    @Override
+    public void start(Stage primaryStage) {
+        // ── Model ────────────────────────────────────────────────────
+<span class="nc" id="L40">        NetworkTopology topology = new NetworkTopology();</span>
+
+<span class="nc" id="L42">        ProtocolRegistry registry = new ProtocolRegistry();</span>
+<span class="nc" id="L43">        registry.register(new ICMPHandler());</span>
+<span class="nc" id="L44">        registry.register(new ARPHandler(new ARPTable()));</span>
+<span class="nc" id="L45">        registry.register(new DNSHandler());</span>
+<span class="nc" id="L46">        registry.register(new DHCPHandler());</span>
+<span class="nc" id="L47">        registry.register(new HTTPHandler());</span>
+
+<span class="nc" id="L49">        clock  = new SimulationClock();</span>
+<span class="nc" id="L50">        engine = new SimulationEngine(topology, registry, clock);</span>
+
+        // ── UI panels ────────────────────────────────────────────────
+<span class="nc" id="L53">        ToolbarPanel      toolbar  = new ToolbarPanel(engine, topology, primaryStage);</span>
+<span class="nc" id="L54">        SidebarPanel      sidebar  = new SidebarPanel(topology);</span>
+<span class="nc" id="L55">        CanvasController  canvas   = new CanvasController(topology, engine);</span>
+<span class="nc" id="L56">        PropertiesPanel   props    = new PropertiesPanel();</span>
+<span class="nc" id="L57">        SimulationLogPanel logPanel = new SimulationLogPanel();</span>
+
+        // ── Wire up events ───────────────────────────────────────────
+<span class="nc" id="L60">        engine.addListener(logPanel::appendEvent);</span>
+<span class="nc" id="L61">        canvas.setOnDeviceSelected(props::showDevice);</span>
+
+<span class="nc" id="L63">        sidebar.setOnAddDevice((type, xy) -&gt;</span>
+<span class="nc" id="L64">            canvas.addDevice(type, xy[0], xy[1]));</span>
+
+<span class="nc" id="L66">        toolbar.setOnNew(() -&gt; {</span>
+<span class="nc" id="L67">            canvas.clear();</span>
+<span class="nc" id="L68">            engine.reset();</span>
+<span class="nc" id="L69">            logPanel.clear();</span>
+<span class="nc" id="L70">            props.showDevice(null);</span>
+<span class="nc" id="L71">        });</span>
+
+<span class="nc" id="L73">        toolbar.setOnLoad(loaded -&gt; {</span>
+<span class="nc" id="L74">            topology.clear();</span>
+<span class="nc" id="L75">            loaded.getDevices().forEach(topology::addDevice);</span>
+<span class="nc" id="L76">            loaded.getCables().forEach(topology::addCable);</span>
+<span class="nc" id="L77">            canvas.reload();</span>
+<span class="nc" id="L78">            engine.reset();</span>
+<span class="nc" id="L79">            logPanel.clear();</span>
+<span class="nc" id="L80">            props.showDevice(null);</span>
+<span class="nc" id="L81">        });</span>
+
+<span class="nc" id="L83">        toolbar.getStartButton().setOnAction(e -&gt; {</span>
+<span class="nc" id="L84">            clock.start();</span>
+<span class="nc" id="L85">            toolbar.getStartButton().setDisable(true);</span>
+<span class="nc" id="L86">            toolbar.getStopButton().setDisable(false);</span>
+<span class="nc" id="L87">        });</span>
+
+<span class="nc" id="L89">        toolbar.getStopButton().setOnAction(e -&gt; {</span>
+<span class="nc" id="L90">            clock.stop();</span>
+<span class="nc" id="L91">            toolbar.getStartButton().setDisable(false);</span>
+<span class="nc" id="L92">            toolbar.getStopButton().setDisable(true);</span>
+<span class="nc" id="L93">        });</span>
+
+<span class="nc" id="L95">        toolbar.getResetButton().setOnAction(e -&gt; {</span>
+<span class="nc" id="L96">            clock.stop();</span>
+<span class="nc" id="L97">            engine.reset();</span>
+<span class="nc" id="L98">            logPanel.clear();</span>
+<span class="nc" id="L99">            toolbar.getStartButton().setDisable(false);</span>
+<span class="nc" id="L100">            toolbar.getStopButton().setDisable(true);</span>
+<span class="nc" id="L101">        });</span>
+
+        // ── AnimationTimer tick loop ─────────────────────────────────
+<span class="nc" id="L104">        tickTimer = new AnimationTimer() {</span>
+<span class="nc" id="L105">            private long lastTick = 0;</span>
+            @Override
+            public void handle(long now) {
+<span class="nc" id="L108">                long interval = (long) (TICK_INTERVAL_NS / clock.getSpeed());</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">                if (now - lastTick &gt;= interval) {</span>
+<span class="nc" id="L110">                    engine.tick();</span>
+<span class="nc" id="L111">                    lastTick = now;</span>
+                }
+<span class="nc" id="L113">            }</span>
+        };
+<span class="nc" id="L115">        tickTimer.start();</span>
+
+        // ── Layout ───────────────────────────────────────────────────
+<span class="nc" id="L118">        BorderPane root = new BorderPane();</span>
+<span class="nc" id="L119">        root.setTop(toolbar.getNode());</span>
+<span class="nc" id="L120">        root.setLeft(sidebar.getNode());</span>
+<span class="nc" id="L121">        root.setCenter(canvas.getNode());</span>
+<span class="nc" id="L122">        root.setRight(props.getNode());</span>
+<span class="nc" id="L123">        root.setBottom(logPanel.getNode());</span>
+
+<span class="nc" id="L125">        Scene scene = new Scene(root, MIN_WIDTH, MIN_HEIGHT);</span>
+        try {
+<span class="nc" id="L127">            scene.getStylesheets().add(</span>
+<span class="nc" id="L128">                getClass().getResource(&quot;/css/dark-theme.css&quot;).toExternalForm());</span>
+<span class="nc" id="L129">        } catch (Exception ignored) {</span>
+            // CSS is optional
+        }
+
+<span class="nc" id="L133">        primaryStage.setTitle(APP_TITLE);</span>
+<span class="nc" id="L134">        primaryStage.setMinWidth(MIN_WIDTH);</span>
+<span class="nc" id="L135">        primaryStage.setMinHeight(MIN_HEIGHT);</span>
+<span class="nc" id="L136">        primaryStage.setScene(scene);</span>
+<span class="nc" id="L137">        primaryStage.setOnCloseRequest(e -&gt; tickTimer.stop());</span>
+<span class="nc" id="L138">        primaryStage.show();</span>
+<span class="nc" id="L139">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

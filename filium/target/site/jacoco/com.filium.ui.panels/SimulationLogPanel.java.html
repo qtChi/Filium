@@ -1,7 +1,110 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SimulationLogPanel.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Filium</a> &gt; <a href="index.source.html" class="el_package">com.filium.ui.panels</a> &gt; <span class="el_source">SimulationLogPanel.java</span></div><h1>SimulationLogPanel.java</h1><pre class="source lang-java linenums">package com.filium.ui.panels;
 
-// TODO: Implement SimulationLogPanel
-<span class="nc" id="L4">public class SimulationLogPanel {</span>
+import com.filium.simulation.SimulationEvent;
+import com.filium.simulation.SimulationEventType;
+import javafx.application.Platform;
+import javafx.geometry.Insets;
+import javafx.scene.Node;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+
+/**
+ * Bottom log panel that displays SimulationEvents as they are emitted.
+ * Thread-safe — appendEvent() may be called from any thread.
+ */
+public class SimulationLogPanel {
+
+    private static final int MAX_LOG_ENTRIES = 500;
+<span class="fc" id="L28">    private static final DateTimeFormatter TIME_FMT =</span>
+<span class="fc" id="L29">        DateTimeFormatter.ofPattern(&quot;HH:mm:ss.SSS&quot;).withZone(ZoneId.systemDefault());</span>
+
+    private final BorderPane root;
+    private final ListView&lt;String&gt; listView;
+
+<span class="fc" id="L34">    public SimulationLogPanel() {</span>
+
+<span class="fc" id="L36">        listView = new ListView&lt;&gt;();</span>
+<span class="fc" id="L37">        listView.setPrefHeight(130);</span>
+<span class="fc" id="L38">        listView.setStyle(&quot;-fx-background-color: #0D0D1F; -fx-border-color: transparent;&quot;</span>
+                        + &quot; -fx-control-inner-background: #0D0D1F;&quot;
+                        + &quot; -fx-font-family: monospace; -fx-font-size: 11;&quot;);
+    
+<span class="fc" id="L42">        Label heading = new Label(&quot;Simulation Log&quot;);</span>
+<span class="fc" id="L43">        heading.setFont(Font.font(null, FontWeight.BOLD, 11));</span>
+<span class="fc" id="L44">        heading.setTextFill(Color.web(&quot;#A0A0B0&quot;));</span>
+<span class="fc" id="L45">        heading.setPadding(new Insets(4, 8, 4, 8));</span>
+    
+<span class="fc" id="L47">        Button btnClear = new Button(&quot;Clear&quot;);</span>
+<span class="fc" id="L48">        btnClear.setStyle(&quot;-fx-background-color: #2E2E4E; -fx-text-fill: #CCCCDD;&quot;</span>
+                        + &quot; -fx-background-radius: 4; -fx-font-size: 10;&quot;);
+<span class="pc" id="L50">        btnClear.setOnAction(e -&gt; listView.getItems().clear());</span>
+    
+<span class="fc" id="L52">        HBox header = new HBox(8, heading, btnClear);</span>
+<span class="fc" id="L53">        header.setPadding(new Insets(4, 8, 4, 8));</span>
+<span class="fc" id="L54">        header.setStyle(&quot;-fx-background-color: #12122A; -fx-border-color: #2E2E4E;&quot;</span>
+                      + &quot; -fx-border-width: 1 0 0 0;&quot;);
+    
+<span class="fc" id="L57">        root = new BorderPane();</span>
+<span class="fc" id="L58">        root.setTop(header);</span>
+<span class="fc" id="L59">        root.setCenter(listView);</span>
+<span class="fc" id="L60">        root.setStyle(&quot;-fx-background-color: #0D0D1F;&quot;);</span>
+<span class="fc" id="L61">    }</span>
+
+<span class="fc" id="L63">    public Node getNode() { return root; }</span>
+
+    /**
+     * Appends a SimulationEvent to the log. Safe to call from any thread.
+     */
+    public void appendEvent(SimulationEvent event) {
+<span class="fc" id="L69">        String entry = formatEntry(event);</span>
+<span class="fc" id="L70">        Platform.runLater(() -&gt; {</span>
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">            if (listView.getItems().size() &gt;= MAX_LOG_ENTRIES) {</span>
+<span class="nc" id="L72">                listView.getItems().remove(0);</span>
+            }
+<span class="fc" id="L74">            listView.getItems().add(entry);</span>
+<span class="fc" id="L75">            listView.scrollTo(listView.getItems().size() - 1);</span>
+<span class="fc" id="L76">        });</span>
+<span class="fc" id="L77">    }</span>
+
+    /** Clears all log entries. */
+    public void clear() {
+<span class="fc" id="L81">        Platform.runLater(() -&gt; listView.getItems().clear());</span>
+<span class="fc" id="L82">    }</span>
+
+    // ─────────────────────────────────────────────────────────────────
+
+    private String formatEntry(SimulationEvent event) {
+<span class="fc" id="L87">        String time = TIME_FMT.format(Instant.ofEpochMilli(event.getTimestamp()));</span>
+<span class="fc" id="L88">        String tag  = tag(event.getType());</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">        String src  = event.getSource()      != null ? event.getSource().getName()      : &quot;-&quot;;</span>
+<span class="fc bfc" id="L90" title="All 2 branches covered.">        String dst  = event.getDestination() != null ? event.getDestination().getName() : &quot;-&quot;;</span>
+<span class="fc" id="L91">        return String.format(&quot;[%s] %s  %s -&gt; %s  |  %s&quot;,</span>
+<span class="fc" id="L92">            time, tag, src, dst, event.getMessage());</span>
+    }
+
+    private String tag(SimulationEventType type) {
+<span class="fc bfc" id="L96" title="All 10 branches covered.">        return switch (type) {</span>
+<span class="fc" id="L97">            case PACKET_SENT     -&gt; &quot;[SENT    ]&quot;;</span>
+<span class="fc" id="L98">            case PACKET_RECEIVED -&gt; &quot;[RECV    ]&quot;;</span>
+<span class="fc" id="L99">            case PACKET_DROPPED  -&gt; &quot;[DROPPED ]&quot;;</span>
+<span class="fc" id="L100">            case PACKET_TTL_EXPIRED -&gt; &quot;[TTL_EXP ]&quot;;</span>
+<span class="fc" id="L101">            case DNS_RESOLVED    -&gt; &quot;[DNS_OK  ]&quot;;</span>
+<span class="fc" id="L102">            case DNS_FAILED      -&gt; &quot;[DNS_FAIL]&quot;;</span>
+<span class="fc" id="L103">            case DHCP_ASSIGNED   -&gt; &quot;[DHCP_OK ]&quot;;</span>
+<span class="fc" id="L104">            case ARP_RESOLVED    -&gt; &quot;[ARP_OK  ]&quot;;</span>
+<span class="fc" id="L105">            case FIREWALL_BLOCKED -&gt; &quot;[FW_BLOCK]&quot;;</span>
+<span class="fc" id="L106">            case FIREWALL_ALLOWED -&gt; &quot;[FW_ALLOW]&quot;;</span>
+        };
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

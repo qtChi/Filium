@@ -97,7 +97,8 @@ public class RoutingTable {
         }
         for (RouteEntry entry : entries.values()) {
             if (destination.isInSubnet(
-                    new IPAddress(entry.getNetwork()), entry.getCidrMask())) {
+                    new IPAddress(entry.getNetwork()),
+                    cidrToMask(entry.getCidrMask()))) {
                 return Optional.of(entry.getNextHop());
             }
         }
@@ -131,5 +132,26 @@ public class RoutingTable {
 
     private String key(String network, String cidr) {
         return network + "/" + cidr;
+    }
+
+    /**
+     * Converts a CIDR prefix length string (e.g. "24") to a
+     * dotted-decimal subnet mask (e.g. "255.255.255.0").
+     */
+    private String cidrToMask(String cidr) {
+        int prefix;
+        try {
+            prefix = Integer.parseInt(cidr.trim());
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid CIDR prefix: " + cidr);
+        }
+        if (prefix < 0 || prefix > 32) {
+            throw new IllegalArgumentException("CIDR prefix out of range: " + prefix);
+        }
+        int mask = prefix == 0 ? 0 : (0xFFFFFFFF << (32 - prefix));
+        return ((mask >> 24) & 0xFF) + "."
+             + ((mask >> 16) & 0xFF) + "."
+             + ((mask >>  8) & 0xFF) + "."
+             + ( mask        & 0xFF);
     }
 }

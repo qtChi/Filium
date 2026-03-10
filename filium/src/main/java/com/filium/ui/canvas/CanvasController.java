@@ -14,7 +14,6 @@ import com.filium.simulation.SimulationEngine;
 import com.filium.ui.dialogs.DeviceConfigDialog;
 import javafx.scene.Node;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.layout.Pane;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -106,6 +105,12 @@ public class CanvasController {
         }
     }
 
+    /** Refreshes the label on the canvas node for the given device (e.g. after a name change). */
+    public void refreshDeviceNode(Device device) {
+        DeviceNode node = deviceNodes.get(device);
+        if (node != null) node.refreshName();
+    }
+
     /** Clears the canvas and topology completely. */
     public void clear() {
         canvas.getChildren().clear();
@@ -154,11 +159,13 @@ public class CanvasController {
         });
 
         node.setOnMousePressed(e -> {
+            e.consume();
             dragStartX = e.getSceneX() - node.getLayoutX();
             dragStartY = e.getSceneY() - node.getLayoutY();
         });
 
         node.setOnMouseDragged(e -> {
+            e.consume();
             if (!cableMode) {
                 double nx = e.getSceneX() - dragStartX;
                 double ny = e.getSceneY() - dragStartY;

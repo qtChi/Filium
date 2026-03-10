@@ -1,7 +1,55 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CableEdge.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Filium</a> &gt; <a href="index.source.html" class="el_package">com.filium.ui.canvas</a> &gt; <span class="el_source">CableEdge.java</span></div><h1>CableEdge.java</h1><pre class="source lang-java linenums">package com.filium.ui.canvas;
 
-// TODO: Implement CableEdge
-<span class="nc" id="L4">public class CableEdge {</span>
+import com.filium.model.network.Cable;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Line;
 
+/**
+ * Visual edge representing a Cable between two DeviceNodes on the canvas.
+ * Binds its endpoints to the centre points of the connected DeviceNodes
+ * so it tracks device drag movements automatically.
+ */
+public class CableEdge extends Line {
+
+<span class="fc" id="L14">    private static final Color CABLE_COLOR = Color.web(&quot;#2E2E4E&quot;);</span>
+<span class="fc" id="L15">    private static final Color CABLE_HOVER = Color.web(&quot;#00D4FF&quot;);</span>
+<span class="fc" id="L16">    private static final double STROKE_WIDTH = 2.5;</span>
+
+    private final Cable cable;
+    private final DeviceNode nodeA;
+    private final DeviceNode nodeB;
+
+<span class="fc" id="L22">    public CableEdge(Cable cable, DeviceNode nodeA, DeviceNode nodeB) {</span>
+<span class="fc" id="L23">        this.cable = cable;</span>
+<span class="fc" id="L24">        this.nodeA = nodeA;</span>
+<span class="fc" id="L25">        this.nodeB = nodeB;</span>
+
+<span class="fc" id="L27">        setStroke(CABLE_COLOR);</span>
+<span class="fc" id="L28">        setStrokeWidth(STROKE_WIDTH);</span>
+<span class="fc" id="L29">        setMouseTransparent(false);</span>
+
+<span class="fc" id="L31">        bindEndpoints();</span>
+
+<span class="pc" id="L33">        setOnMouseEntered(e -&gt; setStroke(CABLE_HOVER));</span>
+<span class="pc" id="L34">        setOnMouseExited(e  -&gt; setStroke(CABLE_COLOR));</span>
+<span class="fc" id="L35">    }</span>
+
+    /** Returns the underlying Cable model object. */
+<span class="fc" id="L38">    public Cable getCable() { return cable; }</span>
+
+    /**
+     * Binds the line endpoints to the centres of the two DeviceNodes.
+     * Called once at construction; re-called if nodes are repositioned.
+     */
+    public void bindEndpoints() {
+<span class="fc" id="L45">        startXProperty().bind(</span>
+<span class="fc" id="L46">            nodeA.layoutXProperty().add(DeviceNode.NODE_WIDTH  / 2.0));</span>
+<span class="fc" id="L47">        startYProperty().bind(</span>
+<span class="fc" id="L48">            nodeA.layoutYProperty().add(DeviceNode.NODE_HEIGHT / 2.0));</span>
+<span class="fc" id="L49">        endXProperty().bind(</span>
+<span class="fc" id="L50">            nodeB.layoutXProperty().add(DeviceNode.NODE_WIDTH  / 2.0));</span>
+<span class="fc" id="L51">        endYProperty().bind(</span>
+<span class="fc" id="L52">            nodeB.layoutYProperty().add(DeviceNode.NODE_HEIGHT / 2.0));</span>
+<span class="fc" id="L53">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

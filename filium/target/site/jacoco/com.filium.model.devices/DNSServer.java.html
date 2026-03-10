@@ -1,7 +1,99 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DNSServer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Filium</a> &gt; <a href="index.source.html" class="el_package">com.filium.model.devices</a> &gt; <span class="el_source">DNSServer.java</span></div><h1>DNSServer.java</h1><pre class="source lang-java linenums">package com.filium.model.devices;
 
-// TODO: Implement DNSServer
-<span class="nc" id="L4">public class DNSServer extends Device {</span>
+import com.filium.model.network.IPAddress;
+import com.filium.packet.Packet;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
+/**
+ * Represents a DNS server. Extends Device.
+ * Stores a hostname-to-IP mapping table (A records).
+ * Responds to DNS query packets with the matching IP or NXDOMAIN.
+ * Query handling logic is delegated to DNSHandler in the simulation layer.
+ */
+public class DNSServer extends Device {
+
+    private final Map&lt;String, IPAddress&gt; records;
+
+    /**
+     * Constructs a new DNSServer with the given name.
+     *
+     * @param name the user-assigned label; must not be null
+     */
+    public DNSServer(String name) {
+<span class="fc" id="L27">        super(name, DeviceType.DNS_SERVER);</span>
+<span class="fc" id="L28">        this.records = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L29">    }</span>
+
+    /**
+     * Adds or updates a DNS A-record mapping.
+     *
+     * @param hostname the hostname to register; must not be null or blank
+     * @param ip       the IP address to associate; must not be null
+     * @throws IllegalArgumentException if hostname is null/blank or ip is null
+     */
+    public void addRecord(String hostname, IPAddress ip) {
+<span class="fc bfc" id="L39" title="All 4 branches covered.">        if (hostname == null || hostname.isBlank()) {</span>
+<span class="fc" id="L40">            throw new IllegalArgumentException(&quot;Hostname must not be null or blank&quot;);</span>
+        }
+<span class="fc bfc" id="L42" title="All 2 branches covered.">        if (ip == null) {</span>
+<span class="fc" id="L43">            throw new IllegalArgumentException(&quot;IP address must not be null&quot;);</span>
+        }
+<span class="fc" id="L45">        records.put(hostname, ip);</span>
+<span class="fc" id="L46">    }</span>
+
+    /**
+     * Removes a DNS A-record by hostname.
+     *
+     * @param hostname the hostname to remove
+     * @return true if the record existed and was removed, false if not found
+     */
+    public boolean removeRecord(String hostname) {
+<span class="fc bfc" id="L55" title="All 2 branches covered.">        return records.remove(hostname) != null;</span>
+    }
+
+    /**
+     * Looks up the IP address for a given hostname.
+     *
+     * @param hostname the hostname to resolve
+     * @return Optional containing the IPAddress if found, empty otherwise
+     */
+    public Optional&lt;IPAddress&gt; lookup(String hostname) {
+<span class="fc" id="L65">        return Optional.ofNullable(records.get(hostname));</span>
+    }
+
+    /**
+     * Returns an unmodifiable view of all DNS records.
+     *
+     * @return unmodifiable map of hostname to IPAddress
+     */
+    public Map&lt;String, IPAddress&gt; getRecords() {
+<span class="fc" id="L74">        return Collections.unmodifiableMap(records);</span>
+    }
+
+    /**
+     * Receives a packet. DNS query handling is delegated to DNSHandler.
+     *
+     * @param packet the incoming packet; must not be null
+     * @throws IllegalArgumentException if packet is null
+     */
+    @Override
+    public void receivePacket(Packet packet) {
+<span class="fc bfc" id="L85" title="All 2 branches covered.">        if (packet == null) {</span>
+<span class="fc" id="L86">            throw new IllegalArgumentException(&quot;Packet must not be null&quot;);</span>
+        }
+        // Query handling is delegated to DNSHandler in the simulation layer
+<span class="fc" id="L89">    }</span>
+
+    /**
+     * Resets this DNS server by clearing all records.
+     */
+    @Override
+    public void reset() {
+<span class="fc" id="L96">        records.clear();</span>
+<span class="fc" id="L97">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

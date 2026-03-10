@@ -1,7 +1,161 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ToolbarPanel.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Filium</a> &gt; <a href="index.source.html" class="el_package">com.filium.ui.panels</a> &gt; <span class="el_source">ToolbarPanel.java</span></div><h1>ToolbarPanel.java</h1><pre class="source lang-java linenums">package com.filium.ui.panels;
 
-// TODO: Implement ToolbarPanel
-<span class="nc" id="L4">public class ToolbarPanel {</span>
+import com.filium.io.TopologyDeserializer;
+import com.filium.io.TopologySerializer;
+import com.filium.model.network.NetworkTopology;
+import com.filium.simulation.SimulationEngine;
+import javafx.geometry.Insets;
+import javafx.scene.Node;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.Separator;
+import javafx.scene.control.ToolBar;
+// import javafx.scene.control.Tooltip;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 
+import java.io.File;
+
+/**
+ * Top toolbar containing simulation controls (Start/Stop/Reset)
+ * and file operations (New/Open/Save).
+ */
+public class ToolbarPanel {
+
+    private final SimulationEngine engine;
+    private final NetworkTopology  topology;
+    private final Stage            ownerStage;
+    private final ToolBar          toolBar;
+
+    private final Button btnStart;
+    private final Button btnStop;
+    private final Button btnReset;
+
+    private Runnable onNew;
+    private java.util.function.Consumer&lt;NetworkTopology&gt; onLoad;
+
+<span class="fc" id="L37">    public ToolbarPanel(SimulationEngine engine,</span>
+                        NetworkTopology topology,
+                        Stage ownerStage) {
+<span class="fc" id="L40">        this.engine     = engine;</span>
+<span class="fc" id="L41">        this.topology   = topology;</span>
+<span class="fc" id="L42">        this.ownerStage = ownerStage;</span>
+
+<span class="fc" id="L44">        btnStart = button(&quot;▶  Start&quot;, &quot;#27AE60&quot;);</span>
+<span class="fc" id="L45">        btnStop  = button(&quot;⏸  Stop&quot;,  &quot;#E94560&quot;);</span>
+<span class="fc" id="L46">        btnReset = button(&quot;⟳  Reset&quot;, &quot;#2980B9&quot;);</span>
+
+<span class="fc" id="L48">        btnStop.setDisable(true);</span>
+
+<span class="fc" id="L50">        btnStart.setOnAction(e -&gt; {</span>
+<span class="nc" id="L51">            engine.reset();</span>
+<span class="nc" id="L52">            engine.getEventLog(); // warm up</span>
+            // Start the clock via reflection on the engine's clock field is not ideal;
+            // instead the engine exposes start via ToolbarPanel calling the clock.
+            // For now, wire up via the public API path through the scene.
+<span class="nc" id="L56">            btnStart.setDisable(true);</span>
+<span class="nc" id="L57">            btnStop.setDisable(false);</span>
+            // The actual clock.start() is called via the action below
+<span class="nc" id="L59">            startSimulation();</span>
+<span class="nc" id="L60">        });</span>
+
+<span class="fc" id="L62">        btnStop.setOnAction(e -&gt; {</span>
+<span class="nc" id="L63">            stopSimulation();</span>
+<span class="nc" id="L64">            btnStart.setDisable(false);</span>
+<span class="nc" id="L65">            btnStop.setDisable(true);</span>
+<span class="nc" id="L66">        });</span>
+
+<span class="fc" id="L68">        btnReset.setOnAction(e -&gt; {</span>
+<span class="nc" id="L69">            engine.reset();</span>
+<span class="nc" id="L70">            btnStart.setDisable(false);</span>
+<span class="nc" id="L71">            btnStop.setDisable(true);</span>
+<span class="nc" id="L72">        });</span>
+
+<span class="fc" id="L74">        Button btnNew  = button(&quot;New&quot;,  &quot;#555577&quot;);</span>
+<span class="fc" id="L75">        Button btnOpen = button(&quot;Open&quot;, &quot;#555577&quot;);</span>
+<span class="fc" id="L76">        Button btnSave = button(&quot;Save&quot;, &quot;#555577&quot;);</span>
+
+<span class="pc" id="L78">        btnNew.setOnAction(e  -&gt; handleNew());</span>
+<span class="pc" id="L79">        btnOpen.setOnAction(e -&gt; handleOpen());</span>
+<span class="pc" id="L80">        btnSave.setOnAction(e -&gt; handleSave());</span>
+
+<span class="fc" id="L82">        toolBar = new ToolBar(</span>
+<span class="fc" id="L83">            btnNew, btnOpen, btnSave,</span>
+<span class="fc" id="L84">            new Separator(),</span>
+<span class="fc" id="L85">            btnStart, btnStop, btnReset</span>
+        );
+<span class="fc" id="L87">        toolBar.setPadding(new Insets(6, 10, 6, 10));</span>
+<span class="fc" id="L88">        toolBar.setStyle(&quot;-fx-background-color: #1A1A2E; -fx-border-color: #2E2E4E;&quot;);</span>
+<span class="fc" id="L89">    }</span>
+
+<span class="fc" id="L91">    public Node getNode() { return toolBar; }</span>
+
+<span class="fc" id="L93">    public void setOnNew(Runnable handler)                                          { this.onNew  = handler; }</span>
+<span class="fc" id="L94">    public void setOnLoad(java.util.function.Consumer&lt;NetworkTopology&gt; handler)    { this.onLoad = handler; }</span>
+
+<span class="fc" id="L96">    public Button getStartButton() { return btnStart; }</span>
+<span class="fc" id="L97">    public Button getStopButton()  { return btnStop; }</span>
+<span class="fc" id="L98">    public Button getResetButton() { return btnReset; }</span>
+
+    // ─────────────────────────────────────────────────────────────────
+
+    private void startSimulation() {
+        // The SimulationClock is internal to the engine; driving ticks is done
+        // by the JavaFX AnimationTimer wired in FiliumApp for a real run.
+        // For now just mark engine as conceptually running.
+<span class="nc" id="L106">    }</span>
+
+<span class="nc" id="L108">    private void stopSimulation() { }</span>
+
+    private void handleNew() {
+<span class="nc bnc" id="L111" title="All 2 branches missed.">        if (onNew != null) onNew.run();</span>
+<span class="nc" id="L112">    }</span>
+
+    private void handleOpen() {
+<span class="nc" id="L115">        FileChooser fc = new FileChooser();</span>
+<span class="nc" id="L116">        fc.setTitle(&quot;Open Topology&quot;);</span>
+<span class="nc" id="L117">        fc.getExtensionFilters().add(</span>
+<span class="nc" id="L118">            new FileChooser.ExtensionFilter(&quot;Filium Topology (*.json)&quot;, &quot;*.json&quot;));</span>
+<span class="nc" id="L119">        File file = fc.showOpenDialog(ownerStage);</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">        if (file == null) return;</span>
+        try {
+<span class="nc" id="L122">            TopologyDeserializer d = new TopologyDeserializer();</span>
+<span class="nc" id="L123">            NetworkTopology loaded = d.deserialize(file);</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">            if (onLoad != null) onLoad.accept(loaded);</span>
+<span class="nc" id="L125">        } catch (Exception ex) {</span>
+<span class="nc" id="L126">            showError(&quot;Open failed&quot;, ex.getMessage());</span>
+        }
+<span class="nc" id="L128">    }</span>
+
+    private void handleSave() {
+<span class="nc" id="L131">        FileChooser fc = new FileChooser();</span>
+<span class="nc" id="L132">        fc.setTitle(&quot;Save Topology&quot;);</span>
+<span class="nc" id="L133">        fc.getExtensionFilters().add(</span>
+<span class="nc" id="L134">            new FileChooser.ExtensionFilter(&quot;Filium Topology (*.json)&quot;, &quot;*.json&quot;));</span>
+<span class="nc" id="L135">        fc.setInitialFileName(&quot;topology.json&quot;);</span>
+<span class="nc" id="L136">        File file = fc.showSaveDialog(ownerStage);</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">        if (file == null) return;</span>
+        try {
+<span class="nc" id="L139">            new TopologySerializer().serialize(topology, file);</span>
+<span class="nc" id="L140">        } catch (Exception ex) {</span>
+<span class="nc" id="L141">            showError(&quot;Save failed&quot;, ex.getMessage());</span>
+        }
+<span class="nc" id="L143">    }</span>
+
+    private void showError(String title, String message) {
+<span class="nc" id="L146">        Alert alert = new Alert(Alert.AlertType.ERROR);</span>
+<span class="nc" id="L147">        alert.setTitle(title);</span>
+<span class="nc" id="L148">        alert.setHeaderText(null);</span>
+<span class="nc" id="L149">        alert.setContentText(message);</span>
+<span class="nc" id="L150">        alert.showAndWait();</span>
+<span class="nc" id="L151">    }</span>
+
+    private Button button(String text, String colour) {
+<span class="fc" id="L154">        Button b = new Button(text);</span>
+<span class="fc" id="L155">        b.setStyle(&quot;-fx-background-color: &quot; + colour + &quot;; -fx-text-fill: #EAEAEA;&quot;</span>
+            + &quot; -fx-background-radius: 6; -fx-font-size: 12;&quot;);
+<span class="fc" id="L157">        b.setPadding(new Insets(5, 14, 5, 14));</span>
+<span class="fc" id="L158">        return b;</span>
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

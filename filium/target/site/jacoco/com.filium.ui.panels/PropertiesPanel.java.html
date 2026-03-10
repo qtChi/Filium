@@ -1,7 +1,177 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PropertiesPanel.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Filium</a> &gt; <a href="index.source.html" class="el_package">com.filium.ui.panels</a> &gt; <span class="el_source">PropertiesPanel.java</span></div><h1>PropertiesPanel.java</h1><pre class="source lang-java linenums">package com.filium.ui.panels;
 
-// TODO: Implement PropertiesPanel
-<span class="nc" id="L4">public class PropertiesPanel {</span>
+import com.filium.model.devices.Device;
+import com.filium.model.network.IPAddress;
+import com.filium.model.network.NetworkInterface;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.control.Label;
+import javafx.scene.control.Separator;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 
+/**
+ * Right-hand panel that displays and allows inline editing of the
+ * currently selected device's properties (name, IP, subnet mask, gateway).
+ * Changes are committed on focus-lost / Enter.
+ */
+public class PropertiesPanel {
+
+    private final VBox root;
+    private final Label heading;
+    private final Label typeLabel;
+    private final TextField nameField;
+    private final TextField ipField;
+    private final TextField maskField;
+    private final TextField gatewayField;
+    private final Label macLabel;
+
+    private Device currentDevice;
+
+<span class="fc" id="L36">    public PropertiesPanel() {</span>
+<span class="fc" id="L37">        heading = new Label(&quot;Properties&quot;);</span>
+<span class="fc" id="L38">        heading.setFont(Font.font(null, FontWeight.BOLD, 13));</span>
+<span class="fc" id="L39">        heading.setTextFill(Color.web(&quot;#EAEAEA&quot;));</span>
+
+<span class="fc" id="L41">        typeLabel = new Label(&quot;&quot;);</span>
+<span class="fc" id="L42">        typeLabel.setTextFill(Color.web(&quot;#A0A0B0&quot;));</span>
+<span class="fc" id="L43">        typeLabel.setFont(Font.font(10));</span>
+
+<span class="fc" id="L45">        nameField    = editableField();</span>
+<span class="fc" id="L46">        ipField      = editableField();</span>
+<span class="fc" id="L47">        maskField    = editableField();</span>
+<span class="fc" id="L48">        gatewayField = editableField();</span>
+<span class="fc" id="L49">        macLabel     = new Label(&quot;&quot;);</span>
+<span class="fc" id="L50">        macLabel.setTextFill(Color.web(&quot;#888899&quot;));</span>
+<span class="fc" id="L51">        macLabel.setFont(Font.font(10));</span>
+
+<span class="fc" id="L53">        GridPane grid = new GridPane();</span>
+<span class="fc" id="L54">        grid.setHgap(8); grid.setVgap(8);</span>
+<span class="fc" id="L55">        grid.setPadding(new Insets(8, 0, 8, 0));</span>
+
+<span class="fc" id="L57">        addRow(grid, 0, &quot;Name&quot;,    nameField);</span>
+<span class="fc" id="L58">        addRow(grid, 1, &quot;IP&quot;,      ipField);</span>
+<span class="fc" id="L59">        addRow(grid, 2, &quot;Mask&quot;,    maskField);</span>
+<span class="fc" id="L60">        addRow(grid, 3, &quot;Gateway&quot;, gatewayField);</span>
+<span class="fc" id="L61">        addRow(grid, 4, &quot;MAC&quot;,     macLabel);</span>
+
+<span class="fc" id="L63">        root = new VBox(8, heading, typeLabel, new Separator(), grid);</span>
+<span class="fc" id="L64">        root.setPadding(new Insets(14, 12, 14, 12));</span>
+<span class="fc" id="L65">        root.setPrefWidth(190);</span>
+<span class="fc" id="L66">        root.setStyle(&quot;-fx-background-color: #1A1A2E; -fx-border-color: #2E2E4E;&quot;</span>
+                    + &quot; -fx-border-width: 0 0 0 1;&quot;);
+
+<span class="fc" id="L69">        showDevice(null);</span>
+
+        // Commit changes on action/focus loss
+<span class="pc" id="L72">        nameField.setOnAction(e    -&gt; commitName());</span>
+<span class="pc bnc" id="L73" title="All 2 branches missed.">        nameField.focusedProperty().addListener((o, ov, nv) -&gt; { if (!nv) commitName(); });</span>
+<span class="pc" id="L74">        ipField.setOnAction(e      -&gt; commitIP());</span>
+<span class="pc bnc" id="L75" title="All 2 branches missed.">        ipField.focusedProperty().addListener((o, ov, nv)   -&gt; { if (!nv) commitIP(); });</span>
+<span class="pc" id="L76">        maskField.setOnAction(e    -&gt; commitMask());</span>
+<span class="pc bnc" id="L77" title="All 2 branches missed.">        maskField.focusedProperty().addListener((o, ov, nv) -&gt; { if (!nv) commitMask(); });</span>
+<span class="pc" id="L78">        gatewayField.setOnAction(e -&gt; commitGateway());</span>
+<span class="pc bnc" id="L79" title="All 2 branches missed.">        gatewayField.focusedProperty().addListener((o, ov, nv) -&gt; { if (!nv) commitGateway(); });</span>
+<span class="fc" id="L80">    }</span>
+
+<span class="fc" id="L82">    public Node getNode() { return root; }</span>
+
+    /** Populates the panel with the given device's data, or clears if null. */
+    public void showDevice(Device device) {
+<span class="fc" id="L86">        this.currentDevice = device;</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">        if (device == null) {</span>
+<span class="fc" id="L88">            heading.setText(&quot;Properties&quot;);</span>
+<span class="fc" id="L89">            typeLabel.setText(&quot;No device selected&quot;);</span>
+<span class="fc" id="L90">            nameField.setText(&quot;&quot;); nameField.setDisable(true);</span>
+<span class="fc" id="L91">            ipField.setText(&quot;&quot;);   ipField.setDisable(true);</span>
+<span class="fc" id="L92">            maskField.setText(&quot;&quot;); maskField.setDisable(true);</span>
+<span class="fc" id="L93">            gatewayField.setText(&quot;&quot;); gatewayField.setDisable(true);</span>
+<span class="fc" id="L94">            macLabel.setText(&quot;&quot;);</span>
+<span class="fc" id="L95">            return;</span>
+        }
+
+<span class="fc" id="L98">        NetworkInterface ni = device.getNetworkInterface();</span>
+<span class="fc" id="L99">        heading.setText(device.getName());</span>
+<span class="fc" id="L100">        typeLabel.setText(device.getDeviceType().getDisplayName());</span>
+<span class="fc" id="L101">        nameField.setText(device.getName()); nameField.setDisable(false);</span>
+<span class="fc bfc" id="L102" title="All 2 branches covered.">        ipField.setText(ni.getIpAddress() != null ? ni.getIpAddress().getAddress() : &quot;&quot;);</span>
+<span class="fc" id="L103">        ipField.setDisable(false);</span>
+<span class="pc bpc" id="L104" title="1 of 2 branches missed.">        maskField.setText(ni.getSubnetMask() != null ? ni.getSubnetMask() : &quot;&quot;);</span>
+<span class="fc" id="L105">        maskField.setDisable(false);</span>
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">        gatewayField.setText(ni.getDefaultGateway() != null</span>
+<span class="pc" id="L107">            ? ni.getDefaultGateway().getAddress() : &quot;&quot;);</span>
+<span class="fc" id="L108">        gatewayField.setDisable(false);</span>
+<span class="fc" id="L109">        macLabel.setText(ni.getMacAddress());</span>
+<span class="fc" id="L110">    }</span>
+
+    // ─────────────────────────────────────────────────────────────────
+
+    private void commitName() {
+<span class="nc bnc" id="L115" title="All 2 branches missed.">        if (currentDevice == null) return;</span>
+<span class="nc" id="L116">        String v = nameField.getText().trim();</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">        if (!v.isEmpty()) {</span>
+<span class="nc" id="L118">            currentDevice.setName(v);</span>
+<span class="nc" id="L119">            heading.setText(v);</span>
+        }
+<span class="nc" id="L121">    }</span>
+
+    private void commitIP() {
+<span class="nc bnc" id="L124" title="All 2 branches missed.">        if (currentDevice == null) return;</span>
+<span class="nc" id="L125">        String v = ipField.getText().trim();</span>
+        try {
+<span class="nc" id="L127">            currentDevice.getNetworkInterface().setIpAddress(</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">                v.isEmpty() ? null : new IPAddress(v));</span>
+<span class="nc" id="L129">        } catch (IllegalArgumentException ignored) {</span>
+            // Restore previous value
+<span class="nc" id="L131">            IPAddress prev = currentDevice.getNetworkInterface().getIpAddress();</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">            ipField.setText(prev != null ? prev.getAddress() : &quot;&quot;);</span>
+        }
+<span class="nc" id="L134">    }</span>
+
+    private void commitMask() {
+<span class="nc bnc" id="L137" title="All 2 branches missed.">        if (currentDevice == null) return;</span>
+<span class="nc" id="L138">        String v = maskField.getText().trim();</span>
+        try {
+<span class="nc bnc" id="L140" title="All 2 branches missed.">            if (!v.isEmpty()) currentDevice.getNetworkInterface().setSubnetMask(v);</span>
+<span class="nc" id="L141">        } catch (IllegalArgumentException ignored) {</span>
+<span class="nc" id="L142">            maskField.setText(currentDevice.getNetworkInterface().getSubnetMask());</span>
+        }
+<span class="nc" id="L144">    }</span>
+
+    private void commitGateway() {
+<span class="nc bnc" id="L147" title="All 2 branches missed.">        if (currentDevice == null) return;</span>
+<span class="nc" id="L148">        String v = gatewayField.getText().trim();</span>
+        try {
+<span class="nc" id="L150">            currentDevice.getNetworkInterface().setDefaultGateway(</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">                v.isEmpty() ? null : new IPAddress(v));</span>
+<span class="nc" id="L152">        } catch (IllegalArgumentException ignored) {</span>
+<span class="nc" id="L153">            IPAddress prev = currentDevice.getNetworkInterface().getDefaultGateway();</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">            gatewayField.setText(prev != null ? prev.getAddress() : &quot;&quot;);</span>
+        }
+<span class="nc" id="L156">    }</span>
+
+    private TextField editableField() {
+<span class="fc" id="L159">        TextField tf = new TextField();</span>
+<span class="fc" id="L160">        tf.setStyle(&quot;-fx-background-color: #0F1535; -fx-text-fill: #EAEAEA;&quot;</span>
+                  + &quot; -fx-border-color: #2E2E4E; -fx-border-radius: 4;&quot;
+                  + &quot; -fx-background-radius: 4; -fx-font-size: 11;&quot;);
+<span class="fc" id="L163">        tf.setPrefWidth(130);</span>
+<span class="fc" id="L164">        return tf;</span>
+    }
+
+    private void addRow(GridPane grid, int row, String labelText, Node field) {
+<span class="fc" id="L168">        Label lbl = new Label(labelText);</span>
+<span class="fc" id="L169">        lbl.setTextFill(Color.web(&quot;#888899&quot;));</span>
+<span class="fc" id="L170">        lbl.setFont(Font.font(10));</span>
+<span class="fc" id="L171">        lbl.setAlignment(Pos.CENTER_RIGHT);</span>
+<span class="fc" id="L172">        lbl.setMinWidth(55);</span>
+<span class="fc" id="L173">        grid.add(lbl, 0, row);</span>
+<span class="fc" id="L174">        grid.add(field, 1, row);</span>
+<span class="fc" id="L175">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

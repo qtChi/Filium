@@ -1,19 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="com.filium.simulation.protocols.TestARPHandler" time="0.022" tests="11" errors="0" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="com.filium.simulation.protocols.TestARPHandler" time="0.017" tests="11" errors="0" skipped="0" failures="0">
   <properties>
     <property name="java.specification.version" value="25"/>
+    <property name="javafx.runtime.version" value="21.0.2+5"/>
     <property name="sun.jnu.encoding" value="UTF-8"/>
     <property name="java.class.path" value="/Users/x/Desktop/ /Filium/filium/target/test-classes:/Users/x/Desktop/ /Filium/filium/target/classes:/Users/x/.m2/repository/org/openjfx/javafx-controls/21.0.2/javafx-controls-21.0.2.jar:/Users/x/.m2/repository/org/openjfx/javafx-controls/21.0.2/javafx-controls-21.0.2-mac-aarch64.jar:/Users/x/.m2/repository/org/openjfx/javafx-graphics/21.0.2/javafx-graphics-21.0.2.jar:/Users/x/.m2/repository/org/openjfx/javafx-graphics/21.0.2/javafx-graphics-21.0.2-mac-aarch64.jar:/Users/x/.m2/repository/org/openjfx/javafx-base/21.0.2/javafx-base-21.0.2.jar:/Users/x/.m2/repository/org/openjfx/javafx-base/21.0.2/javafx-base-21.0.2-mac-aarch64.jar:/Users/x/.m2/repository/org/openjfx/javafx-fxml/21.0.2/javafx-fxml-21.0.2.jar:/Users/x/.m2/repository/org/openjfx/javafx-fxml/21.0.2/javafx-fxml-21.0.2-mac-aarch64.jar:/Users/x/.m2/repository/com/fasterxml/jackson/core/jackson-databind/2.16.1/jackson-databind-2.16.1.jar:/Users/x/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.16.1/jackson-annotations-2.16.1.jar:/Users/x/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.16.1/jackson-core-2.16.1.jar:/Users/x/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.10.2/junit-jupiter-api-5.10.2.jar:/Users/x/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/Users/x/.m2/repository/org/junit/platform/junit-platform-commons/1.10.2/junit-platform-commons-1.10.2.jar:/Users/x/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/Users/x/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.10.2/junit-jupiter-engine-5.10.2.jar:/Users/x/.m2/repository/org/junit/platform/junit-platform-engine/1.10.2/junit-platform-engine-1.10.2.jar:/Users/x/.m2/repository/org/junit/jupiter/junit-jupiter-params/5.10.2/junit-jupiter-params-5.10.2.jar:/Users/x/.m2/repository/org/mockito/mockito-core/5.10.0/mockito-core-5.10.0.jar:/Users/x/.m2/repository/net/bytebuddy/byte-buddy/1.14.11/byte-buddy-1.14.11.jar:/Users/x/.m2/repository/net/bytebuddy/byte-buddy-agent/1.14.11/byte-buddy-agent-1.14.11.jar:/Users/x/.m2/repository/org/objenesis/objenesis/3.3/objenesis-3.3.jar:/Users/x/.m2/repository/org/mockito/mockito-junit-jupiter/5.10.0/mockito-junit-jupiter-5.10.0.jar:/Users/x/.m2/repository/org/testfx/testfx-core/4.0.18/testfx-core-4.0.18.jar:/Users/x/.m2/repository/org/hamcrest/hamcrest/2.1/hamcrest-2.1.jar:/Users/x/.m2/repository/org/assertj/assertj-core/3.13.2/assertj-core-3.13.2.jar:/Users/x/.m2/repository/org/osgi/org.osgi.core/6.0.0/org.osgi.core-6.0.0.jar:/Users/x/.m2/repository/org/testfx/testfx-junit5/4.0.18/testfx-junit5-4.0.18.jar:"/>
     <property name="java.vm.vendor" value="Homebrew"/>
     <property name="sun.arch.data.model" value="64"/>
     <property name="java.vendor.url" value="https://github.com/Homebrew/homebrew-core/issues"/>
     <property name="user.timezone" value="America/Denver"/>
+    <property name="javafx.version" value="21.0.2"/>
     <property name="os.name" value="Mac OS X"/>
     <property name="java.vm.specification.version" value="25"/>
     <property name="sun.java.launcher" value="SUN_STANDARD"/>
     <property name="user.country" value="US"/>
     <property name="sun.boot.library.path" value="/opt/homebrew/Cellar/openjdk/25.0.2/libexec/openjdk.jdk/Contents/Home/lib"/>
-    <property name="sun.java.command" value="/Users/x/Desktop/ /Filium/filium/target/surefire/surefirebooter-20260310011104595_3.jar /Users/x/Desktop/ /Filium/filium/target/surefire 2026-03-10T01-11-04_488-jvmRun1 surefire-20260310011104595_1tmp surefire_0-20260310011104595_2tmp"/>
+    <property name="sun.java.command" value="/Users/x/Desktop/ /Filium/filium/target/surefire/surefirebooter-20260310142457640_3.jar /Users/x/Desktop/ /Filium/filium/target/surefire 2026-03-10T14-24-57_525-jvmRun1 surefire-20260310142457640_1tmp surefire_0-20260310142457640_2tmp"/>
     <property name="http.nonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
     <property name="jdk.debug" value="release"/>
     <property name="surefire.test.class.path" value="/Users/x/Desktop/ /Filium/filium/target/test-classes:/Users/x/Desktop/ /Filium/filium/target/classes:/Users/x/.m2/repository/org/openjfx/javafx-controls/21.0.2/javafx-controls-21.0.2.jar:/Users/x/.m2/repository/org/openjfx/javafx-controls/21.0.2/javafx-controls-21.0.2-mac-aarch64.jar:/Users/x/.m2/repository/org/openjfx/javafx-graphics/21.0.2/javafx-graphics-21.0.2.jar:/Users/x/.m2/repository/org/openjfx/javafx-graphics/21.0.2/javafx-graphics-21.0.2-mac-aarch64.jar:/Users/x/.m2/repository/org/openjfx/javafx-base/21.0.2/javafx-base-21.0.2.jar:/Users/x/.m2/repository/org/openjfx/javafx-base/21.0.2/javafx-base-21.0.2-mac-aarch64.jar:/Users/x/.m2/repository/org/openjfx/javafx-fxml/21.0.2/javafx-fxml-21.0.2.jar:/Users/x/.m2/repository/org/openjfx/javafx-fxml/21.0.2/javafx-fxml-21.0.2-mac-aarch64.jar:/Users/x/.m2/repository/com/fasterxml/jackson/core/jackson-databind/2.16.1/jackson-databind-2.16.1.jar:/Users/x/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.16.1/jackson-annotations-2.16.1.jar:/Users/x/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.16.1/jackson-core-2.16.1.jar:/Users/x/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.10.2/junit-jupiter-api-5.10.2.jar:/Users/x/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/Users/x/.m2/repository/org/junit/platform/junit-platform-commons/1.10.2/junit-platform-commons-1.10.2.jar:/Users/x/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/Users/x/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.10.2/junit-jupiter-engine-5.10.2.jar:/Users/x/.m2/repository/org/junit/platform/junit-platform-engine/1.10.2/junit-platform-engine-1.10.2.jar:/Users/x/.m2/repository/org/junit/jupiter/junit-jupiter-params/5.10.2/junit-jupiter-params-5.10.2.jar:/Users/x/.m2/repository/org/mockito/mockito-core/5.10.0/mockito-core-5.10.0.jar:/Users/x/.m2/repository/net/bytebuddy/byte-buddy/1.14.11/byte-buddy-1.14.11.jar:/Users/x/.m2/repository/net/bytebuddy/byte-buddy-agent/1.14.11/byte-buddy-agent-1.14.11.jar:/Users/x/.m2/repository/org/objenesis/objenesis/3.3/objenesis-3.3.jar:/Users/x/.m2/repository/org/mockito/mockito-junit-jupiter/5.10.0/mockito-junit-jupiter-5.10.0.jar:/Users/x/.m2/repository/org/testfx/testfx-core/4.0.18/testfx-core-4.0.18.jar:/Users/x/.m2/repository/org/hamcrest/hamcrest/2.1/hamcrest-2.1.jar:/Users/x/.m2/repository/org/assertj/assertj-core/3.13.2/assertj-core-3.13.2.jar:/Users/x/.m2/repository/org/osgi/org.osgi.core/6.0.0/org.osgi.core-6.0.0.jar:/Users/x/.m2/repository/org/testfx/testfx-junit5/4.0.18/testfx-junit5-4.0.18.jar:"/>
@@ -30,7 +32,7 @@
     <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
     <property name="java.specification.name" value="Java Platform API Specification"/>
     <property name="apple.awt.application.name" value="ForkedBooter"/>
-    <property name="surefire.real.class.path" value="/Users/x/Desktop/ /Filium/filium/target/surefire/surefirebooter-20260310011104595_3.jar"/>
+    <property name="surefire.real.class.path" value="/Users/x/Desktop/ /Filium/filium/target/surefire/surefirebooter-20260310142457640_3.jar"/>
     <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
     <property name="ftp.nonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
     <property name="java.runtime.version" value="25.0.2"/>
@@ -60,15 +62,15 @@
     <property name="socksNonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
     <property name="java.class.version" value="69.0"/>
   </properties>
-  <testcase name="canHandle_arpReply_returnsTrue" classname="com.filium.simulation.protocols.TestARPHandler" time="0.002"/>
-  <testcase name="handle_requestToUnknownTarget_emitsDroppedEvent" classname="com.filium.simulation.protocols.TestARPHandler" time="0.001"/>
-  <testcase name="handle_request_learnsSenderInARPTable" classname="com.filium.simulation.protocols.TestARPHandler" time="0.002"/>
-  <testcase name="handle_reply_learnsSenderInARPTable" classname="com.filium.simulation.protocols.TestARPHandler" time="0.002"/>
+  <testcase name="canHandle_arpReply_returnsTrue" classname="com.filium.simulation.protocols.TestARPHandler" time="0.001"/>
+  <testcase name="handle_requestToUnknownTarget_emitsDroppedEvent" classname="com.filium.simulation.protocols.TestARPHandler" time="0.0"/>
+  <testcase name="handle_request_learnsSenderInARPTable" classname="com.filium.simulation.protocols.TestARPHandler" time="0.001"/>
+  <testcase name="handle_reply_learnsSenderInARPTable" classname="com.filium.simulation.protocols.TestARPHandler" time="0.001"/>
   <testcase name="handle_reply_returnsNoEvents" classname="com.filium.simulation.protocols.TestARPHandler" time="0.001"/>
   <testcase name="handle_requestToKnownTarget_enqueuesReply" classname="com.filium.simulation.protocols.TestARPHandler" time="0.001"/>
-  <testcase name="handle_requestToUnknownTarget_noReplyEnqueued" classname="com.filium.simulation.protocols.TestARPHandler" time="0.001"/>
-  <testcase name="constructor_nullARPTable_throws" classname="com.filium.simulation.protocols.TestARPHandler" time="0.001"/>
-  <testcase name="canHandle_arpRequest_returnsTrue" classname="com.filium.simulation.protocols.TestARPHandler" time="0.002"/>
-  <testcase name="handle_requestToKnownTarget_emitsARPResolvedEvent" classname="com.filium.simulation.protocols.TestARPHandler" time="0.001"/>
+  <testcase name="handle_requestToUnknownTarget_noReplyEnqueued" classname="com.filium.simulation.protocols.TestARPHandler" time="0.0"/>
+  <testcase name="constructor_nullARPTable_throws" classname="com.filium.simulation.protocols.TestARPHandler" time="0.0"/>
+  <testcase name="canHandle_arpRequest_returnsTrue" classname="com.filium.simulation.protocols.TestARPHandler" time="0.001"/>
+  <testcase name="handle_requestToKnownTarget_emitsARPResolvedEvent" classname="com.filium.simulation.protocols.TestARPHandler" time="0.002"/>
   <testcase name="canHandle_icmpPacket_returnsFalse" classname="com.filium.simulation.protocols.TestARPHandler" time="0.001"/>
 </testsuite>

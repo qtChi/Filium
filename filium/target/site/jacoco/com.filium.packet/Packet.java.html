@@ -1,7 +1,137 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Packet.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Filium</a> &gt; <a href="index.source.html" class="el_package">com.filium.packet</a> &gt; <span class="el_source">Packet.java</span></div><h1>Packet.java</h1><pre class="source lang-java linenums">package com.filium.packet;
 
-// TODO: Implement Packet
-<span class="nc" id="L4">public class Packet {</span>
+import java.util.Objects;
+import java.util.UUID;
 
+/**
+ * Represents a network packet travelling through the Filium simulation.
+ * Immutable once created. Use {@link #withHeader(PacketHeader)} to produce
+ * a new Packet with an updated header (e.g. after TTL decrement at a router).
+ */
+public final class Packet {
+
+    private final String id;
+    private final PacketType type;
+    private final PacketHeader header;
+    private final String payload;
+    private final long createdAt;
+
+    /**
+     * Constructs a new Packet. A UUID is auto-generated as the packet identifier.
+     *
+     * @param type    the protocol type of this packet; must not be null
+     * @param header  the IP/MAC header; must not be null
+     * @param payload the string payload (e.g. DNS hostname, HTTP request line);
+     *                null is treated as an empty string
+     * @throws IllegalArgumentException if type or header is null
+     */
+<span class="fc" id="L28">    public Packet(PacketType type, PacketHeader header, String payload) {</span>
+<span class="fc bfc" id="L29" title="All 2 branches covered.">        if (type == null) {</span>
+<span class="fc" id="L30">            throw new IllegalArgumentException(&quot;PacketType must not be null&quot;);</span>
+        }
+<span class="fc bfc" id="L32" title="All 2 branches covered.">        if (header == null) {</span>
+<span class="fc" id="L33">            throw new IllegalArgumentException(&quot;PacketHeader must not be null&quot;);</span>
+        }
+<span class="fc" id="L35">        this.id = UUID.randomUUID().toString();</span>
+<span class="fc" id="L36">        this.type = type;</span>
+<span class="fc" id="L37">        this.header = header;</span>
+<span class="fc bfc" id="L38" title="All 2 branches covered.">        this.payload = payload != null ? payload : &quot;&quot;;</span>
+<span class="fc" id="L39">        this.createdAt = System.currentTimeMillis();</span>
+<span class="fc" id="L40">    }</span>
+
+    /**
+     * Private constructor used by {@link #withHeader(PacketHeader)} to preserve
+     * the original packet ID and creation timestamp.
+     */
+<span class="fc" id="L46">    private Packet(String id, PacketType type, PacketHeader header,</span>
+                   String payload, long createdAt) {
+<span class="fc" id="L48">        this.id = id;</span>
+<span class="fc" id="L49">        this.type = type;</span>
+<span class="fc" id="L50">        this.header = header;</span>
+<span class="fc" id="L51">        this.payload = payload;</span>
+<span class="fc" id="L52">        this.createdAt = createdAt;</span>
+<span class="fc" id="L53">    }</span>
+
+    /**
+     * Returns a new Packet that is identical to this one but with the given header.
+     * The packet ID and creation timestamp are preserved.
+     * Used by routers to decrement TTL without creating an entirely new packet.
+     *
+     * @param newHeader the replacement header; must not be null
+     * @return new Packet with the updated header
+     * @throws IllegalArgumentException if newHeader is null
+     */
+    public Packet withHeader(PacketHeader newHeader) {
+<span class="fc bfc" id="L65" title="All 2 branches covered.">        if (newHeader == null) {</span>
+<span class="fc" id="L66">            throw new IllegalArgumentException(&quot;New header must not be null&quot;);</span>
+        }
+<span class="fc" id="L68">        return new Packet(id, type, newHeader, payload, createdAt);</span>
+    }
+
+    /**
+     * Returns the unique identifier for this packet.
+     *
+     * @return UUID string
+     */
+    public String getId() {
+<span class="fc" id="L77">        return id;</span>
+    }
+
+    /**
+     * Returns the protocol type of this packet.
+     *
+     * @return PacketType
+     */
+    public PacketType getType() {
+<span class="fc" id="L86">        return type;</span>
+    }
+
+    /**
+     * Returns the IP/MAC header of this packet.
+     *
+     * @return PacketHeader
+     */
+    public PacketHeader getHeader() {
+<span class="fc" id="L95">        return header;</span>
+    }
+
+    /**
+     * Returns the string payload of this packet.
+     * Never null — defaults to empty string if null was passed at construction.
+     *
+     * @return payload string
+     */
+    public String getPayload() {
+<span class="fc" id="L105">        return payload;</span>
+    }
+
+    /**
+     * Returns the creation timestamp in milliseconds since epoch.
+     *
+     * @return creation time as long
+     */
+    public long getCreatedAt() {
+<span class="fc" id="L114">        return createdAt;</span>
+    }
+
+    @Override
+    public boolean equals(Object o) {
+<span class="fc bfc" id="L119" title="All 2 branches covered.">        if (this == o) return true;</span>
+<span class="pc bpc" id="L120" title="1 of 2 branches missed.">        if (!(o instanceof Packet other)) return false;</span>
+<span class="fc" id="L121">        return id.equals(other.id);</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="fc" id="L126">        return Objects.hash(id);</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="fc" id="L131">        return &quot;Packet{id=&quot; + id + &quot;, type=&quot; + type +</span>
+<span class="fc" id="L132">               &quot;, src=&quot; + header.getSourceIP() +</span>
+<span class="fc" id="L133">               &quot;, dst=&quot; + header.getDestinationIP() +</span>
+<span class="fc" id="L134">               &quot;, ttl=&quot; + header.getTtl() + &quot;}&quot;;</span>
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,7 +1,164 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DeviceConfigDialog.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Filium</a> &gt; <a href="index.source.html" class="el_package">com.filium.ui.dialogs</a> &gt; <span class="el_source">DeviceConfigDialog.java</span></div><h1>DeviceConfigDialog.java</h1><pre class="source lang-java linenums">package com.filium.ui.dialogs;
 
-// TODO: Implement DeviceConfigDialog
-<span class="nc" id="L4">public class DeviceConfigDialog {</span>
+import com.filium.model.devices.Device;
+import com.filium.model.devices.DHCPServer;
+import com.filium.model.devices.DNSServer;
+import com.filium.model.network.IPAddress;
+import javafx.geometry.Insets;
+import javafx.scene.control.*;
+import javafx.scene.layout.GridPane;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.stage.StageStyle;
 
+/**
+ * Modal dialog for configuring a device: name, IP address, subnet mask,
+ * default gateway, and type-specific settings (DHCP pool, DNS records).
+ * Returns the modified Device on OK, empty on Cancel.
+ */
+public class DeviceConfigDialog extends Dialog&lt;Device&gt; {
+
+    private final Device device;
+
+<span class="fc" id="L23">    private final TextField nameField    = field();</span>
+<span class="fc" id="L24">    private final TextField ipField      = field();</span>
+<span class="fc" id="L25">    private final TextField maskField    = field();</span>
+<span class="fc" id="L26">    private final TextField gatewayField = field();</span>
+
+    // DHCP-specific
+<span class="fc" id="L29">    private final TextField poolStartField = field();</span>
+<span class="fc" id="L30">    private final TextField poolEndField   = field();</span>
+
+    // DNS-specific
+<span class="fc" id="L33">    private final TextField dnsHostField  = field();</span>
+<span class="fc" id="L34">    private final TextField dnsIPField    = field();</span>
+
+<span class="fc" id="L36">    public DeviceConfigDialog(Device device) {</span>
+<span class="fc" id="L37">        this.device = device;</span>
+
+<span class="fc" id="L39">        initStyle(StageStyle.UTILITY);</span>
+<span class="fc" id="L40">        setTitle(&quot;Configure — &quot; + device.getName());</span>
+<span class="fc" id="L41">        setHeaderText(device.getDeviceType().getDisplayName()</span>
+<span class="fc" id="L42">            + &quot;:  &quot; + device.getName());</span>
+<span class="fc" id="L43">        setResizable(true);</span>
+
+<span class="fc" id="L45">        getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);</span>
+<span class="fc" id="L46">        getDialogPane().setStyle(&quot;-fx-background-color: #1A1A2E;&quot;);</span>
+
+<span class="fc" id="L48">        GridPane grid = new GridPane();</span>
+<span class="fc" id="L49">        grid.setHgap(10); grid.setVgap(10);</span>
+<span class="fc" id="L50">        grid.setPadding(new Insets(16));</span>
+
+        // Pre-populate
+<span class="fc" id="L53">        nameField.setText(device.getName());</span>
+<span class="fc" id="L54">        IPAddress ip = device.getNetworkInterface().getIpAddress();</span>
+<span class="fc bfc" id="L55" title="All 2 branches covered.">        ipField.setText(ip != null ? ip.getAddress() : &quot;&quot;);</span>
+<span class="pc bpc" id="L56" title="1 of 2 branches missed.">        maskField.setText(device.getNetworkInterface().getSubnetMask() != null</span>
+<span class="pc" id="L57">            ? device.getNetworkInterface().getSubnetMask() : &quot;255.255.255.0&quot;);</span>
+<span class="fc" id="L58">        IPAddress gw = device.getNetworkInterface().getDefaultGateway();</span>
+<span class="pc bpc" id="L59" title="1 of 2 branches missed.">        gatewayField.setText(gw != null ? gw.getAddress() : &quot;&quot;);</span>
+
+<span class="fc" id="L61">        addRow(grid, 0, &quot;Name&quot;,           nameField);</span>
+<span class="fc" id="L62">        addRow(grid, 1, &quot;IP Address&quot;,     ipField);</span>
+<span class="fc" id="L63">        addRow(grid, 2, &quot;Subnet Mask&quot;,    maskField);</span>
+<span class="fc" id="L64">        addRow(grid, 3, &quot;Default Gateway&quot;, gatewayField);</span>
+
+<span class="fc" id="L66">        int row = 4;</span>
+
+<span class="fc bfc" id="L68" title="All 2 branches covered.">        if (device instanceof DHCPServer dhcp) {</span>
+<span class="fc" id="L69">            addSeparatorRow(grid, row++, &quot;DHCP Pool&quot;);</span>
+<span class="fc" id="L70">            IPAddress ps = dhcp.getPoolStart();</span>
+<span class="fc" id="L71">            IPAddress pe = dhcp.getPoolEnd();</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">            poolStartField.setText(ps != null ? ps.getAddress() : &quot;&quot;);</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">            poolEndField.setText(pe != null ? pe.getAddress() : &quot;&quot;);</span>
+<span class="fc" id="L74">            addRow(grid, row++, &quot;Pool Start&quot;, poolStartField);</span>
+<span class="fc" id="L75">            addRow(grid, row++, &quot;Pool End&quot;,   poolEndField);</span>
+        }
+
+<span class="fc bfc" id="L78" title="All 2 branches covered.">        if (device instanceof DNSServer dns) {</span>
+<span class="fc" id="L79">            addSeparatorRow(grid, row++, &quot;Add DNS Record&quot;);</span>
+<span class="fc" id="L80">            dnsHostField.setPromptText(&quot;hostname&quot;);</span>
+<span class="fc" id="L81">            dnsIPField.setPromptText(&quot;ip address&quot;);</span>
+<span class="fc" id="L82">            addRow(grid, row++, &quot;Hostname&quot;, dnsHostField);</span>
+<span class="fc" id="L83">            addRow(grid, row,   &quot;IP&quot;,       dnsIPField);</span>
+        }
+
+<span class="fc" id="L86">        getDialogPane().setContent(grid);</span>
+
+<span class="fc" id="L88">        setResultConverter(btn -&gt; {</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">            if (btn != ButtonType.OK) return null;</span>
+<span class="nc" id="L90">            applyChanges();</span>
+<span class="nc" id="L91">            return device;</span>
+        });
+<span class="fc" id="L93">    }</span>
+
+    // ─────────────────────────────────────────────────────────────────
+
+    private void applyChanges() {
+<span class="nc" id="L98">        String name = nameField.getText().trim();</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">        if (!name.isEmpty()) device.setName(name);</span>
+
+        try {
+<span class="nc" id="L102">            String ipStr = ipField.getText().trim();</span>
+<span class="nc" id="L103">            device.getNetworkInterface().setIpAddress(</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">                ipStr.isEmpty() ? null : new IPAddress(ipStr));</span>
+<span class="nc" id="L105">        } catch (IllegalArgumentException ignored) {}</span>
+
+        try {
+<span class="nc" id="L108">            String mask = maskField.getText().trim();</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">            if (!mask.isEmpty()) device.getNetworkInterface().setSubnetMask(mask);</span>
+<span class="nc" id="L110">        } catch (IllegalArgumentException ignored) {}</span>
+
+        try {
+<span class="nc" id="L113">            String gw = gatewayField.getText().trim();</span>
+<span class="nc" id="L114">            device.getNetworkInterface().setDefaultGateway(</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">                gw.isEmpty() ? null : new IPAddress(gw));</span>
+<span class="nc" id="L116">        } catch (IllegalArgumentException ignored) {}</span>
+
+<span class="nc bnc" id="L118" title="All 2 branches missed.">        if (device instanceof DHCPServer dhcp) {</span>
+            try {
+<span class="nc" id="L120">                String ps = poolStartField.getText().trim();</span>
+<span class="nc" id="L121">                String pe = poolEndField.getText().trim();</span>
+<span class="nc bnc" id="L122" title="All 4 branches missed.">                if (!ps.isEmpty() &amp;&amp; !pe.isEmpty()) {</span>
+<span class="nc" id="L123">                    dhcp.setPool(new IPAddress(ps), new IPAddress(pe));</span>
+                }
+<span class="nc" id="L125">            } catch (IllegalArgumentException ignored) {}</span>
+        }
+
+<span class="nc bnc" id="L128" title="All 2 branches missed.">        if (device instanceof DNSServer dns) {</span>
+            try {
+<span class="nc" id="L130">                String host = dnsHostField.getText().trim();</span>
+<span class="nc" id="L131">                String dip  = dnsIPField.getText().trim();</span>
+<span class="nc bnc" id="L132" title="All 4 branches missed.">                if (!host.isEmpty() &amp;&amp; !dip.isEmpty()) {</span>
+<span class="nc" id="L133">                    dns.addRecord(host, new IPAddress(dip));</span>
+                }
+<span class="nc" id="L135">            } catch (IllegalArgumentException ignored) {}</span>
+        }
+<span class="nc" id="L137">    }</span>
+
+    private TextField field() {
+<span class="fc" id="L140">        TextField tf = new TextField();</span>
+<span class="fc" id="L141">        tf.setStyle(&quot;-fx-background-color: #0F1535; -fx-text-fill: #EAEAEA;&quot;</span>
+                  + &quot; -fx-border-color: #2E2E4E; -fx-border-radius: 4;&quot;
+                  + &quot; -fx-background-radius: 4; -fx-font-size: 12;&quot;);
+<span class="fc" id="L144">        tf.setPrefWidth(200);</span>
+<span class="fc" id="L145">        return tf;</span>
+    }
+
+    private void addRow(GridPane grid, int row, String labelText, javafx.scene.Node field) {
+<span class="fc" id="L149">        Label lbl = new Label(labelText);</span>
+<span class="fc" id="L150">        lbl.setTextFill(Color.web(&quot;#A0A0B0&quot;));</span>
+<span class="fc" id="L151">        lbl.setFont(Font.font(11));</span>
+<span class="fc" id="L152">        lbl.setMinWidth(110);</span>
+<span class="fc" id="L153">        grid.add(lbl, 0, row);</span>
+<span class="fc" id="L154">        grid.add(field, 1, row);</span>
+<span class="fc" id="L155">    }</span>
+
+    private void addSeparatorRow(GridPane grid, int row, String title) {
+<span class="fc" id="L158">        Label lbl = new Label(&quot;── &quot; + title + &quot; ──&quot;);</span>
+<span class="fc" id="L159">        lbl.setTextFill(Color.web(&quot;#4A4A7A&quot;));</span>
+<span class="fc" id="L160">        lbl.setFont(Font.font(10));</span>
+<span class="fc" id="L161">        grid.add(lbl, 0, row, 2, 1);</span>
+<span class="fc" id="L162">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

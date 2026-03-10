@@ -1,7 +1,81 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProtocolRegistry.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Filium</a> &gt; <a href="index.source.html" class="el_package">com.filium.simulation.protocols</a> &gt; <span class="el_source">ProtocolRegistry.java</span></div><h1>ProtocolRegistry.java</h1><pre class="source lang-java linenums">package com.filium.simulation.protocols;
 
-// TODO: Implement ProtocolRegistry
-<span class="nc" id="L4">public class ProtocolRegistry {</span>
+import com.filium.packet.Packet;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * Maintains the ordered list of registered Protocol handlers.
+ * The SimulationEngine queries this registry to find the correct
+ * handler for each incoming packet.
+ */
+public class ProtocolRegistry {
+
+    private final List&lt;Protocol&gt; handlers;
+
+    /** Constructs an empty ProtocolRegistry. */
+<span class="fc" id="L20">    public ProtocolRegistry() {</span>
+<span class="fc" id="L21">        this.handlers = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L22">    }</span>
+
+    /**
+     * Registers a protocol handler.
+     *
+     * @param protocol the handler to register; must not be null
+     * @throws IllegalArgumentException if protocol is null
+     */
+    public void register(Protocol protocol) {
+<span class="fc bfc" id="L31" title="All 2 branches covered.">        if (protocol == null) {</span>
+<span class="fc" id="L32">            throw new IllegalArgumentException(&quot;Protocol must not be null&quot;);</span>
+        }
+<span class="fc" id="L34">        handlers.add(protocol);</span>
+<span class="fc" id="L35">    }</span>
+
+    /**
+     * Removes a protocol handler.
+     *
+     * @param protocol the handler to remove
+     * @return true if the handler was registered and has been removed
+     */
+    public boolean unregister(Protocol protocol) {
+<span class="fc" id="L44">        return handlers.remove(protocol);</span>
+    }
+
+    /**
+     * Returns the first registered handler that can process the given packet.
+     *
+     * @param packet the packet to find a handler for; must not be null
+     * @return Optional containing the matching Protocol, or empty if none found
+     * @throws IllegalArgumentException if packet is null
+     */
+    public Optional&lt;Protocol&gt; findHandler(Packet packet) {
+<span class="fc bfc" id="L55" title="All 2 branches covered.">        if (packet == null) {</span>
+<span class="fc" id="L56">            throw new IllegalArgumentException(&quot;Packet must not be null&quot;);</span>
+        }
+<span class="fc" id="L58">        return handlers.stream()</span>
+<span class="fc" id="L59">            .filter(h -&gt; h.canHandle(packet))</span>
+<span class="fc" id="L60">            .findFirst();</span>
+    }
+
+    /**
+     * Returns an unmodifiable view of all registered handlers.
+     *
+     * @return unmodifiable list of Protocol
+     */
+    public List&lt;Protocol&gt; getHandlers() {
+<span class="fc" id="L69">        return Collections.unmodifiableList(handlers);</span>
+    }
+
+    /**
+     * Returns the number of registered handlers.
+     *
+     * @return handler count
+     */
+    public int size() {
+<span class="fc" id="L78">        return handlers.size();</span>
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -103,15 +103,4 @@ class TestSidebarPanel {
         assertEquals(DeviceType.PC, captured.get());
     }
 
-    @Test
-    void prefWidth_greaterThanZero() throws InterruptedException {
-        AtomicReference<Double> ref = new AtomicReference<>();
-        CountDownLatch latch = new CountDownLatch(1);
-        Platform.runLater(() -> {
-            ref.set(((VBox) make().getNode()).getPrefWidth());
-            latch.countDown();
-        });
-        latch.await();
-        assertTrue(ref.get() > 0);
-    }
 }

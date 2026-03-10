@@ -1,7 +1,86 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Router.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Filium</a> &gt; <a href="index.source.html" class="el_package">com.filium.model.devices</a> &gt; <span class="el_source">Router.java</span></div><h1>Router.java</h1><pre class="source lang-java linenums">package com.filium.model.devices;
 
-// TODO: Implement Router
-<span class="nc" id="L4">public class Router extends Device {</span>
+import com.filium.model.network.NetworkInterface;
+import com.filium.packet.Packet;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+/**
+ * Represents a network router. Extends Device.
+ * Supports multiple network interfaces and forwards packets
+ * based on destination IP. Routing logic is delegated to the
+ * SimulationEngine — this class manages interfaces and state only.
+ */
+public class Router extends Device {
+
+    public static final int MAX_INTERFACES = 8;
+
+    private final List&lt;NetworkInterface&gt; interfaces;
+
+    /**
+     * Constructs a new Router with the given name.
+     *
+     * @param name the user-assigned label; must not be null
+     */
+    public Router(String name) {
+<span class="fc" id="L28">        super(name, DeviceType.ROUTER);</span>
+<span class="fc" id="L29">        this.interfaces = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L30">        this.interfaces.add(getNetworkInterface());</span>
+<span class="fc" id="L31">    }</span>
+
+    /**
+     * Adds a network interface to this router.
+     *
+     * @param networkInterface the interface to add; must not be null
+     * @throws IllegalArgumentException if networkInterface is null
+     * @throws IllegalStateException    if the router already has MAX_INTERFACES interfaces
+     */
+    public void addInterface(NetworkInterface networkInterface) {
+<span class="fc bfc" id="L41" title="All 2 branches covered.">        if (networkInterface == null) {</span>
+<span class="fc" id="L42">            throw new IllegalArgumentException(&quot;NetworkInterface must not be null&quot;);</span>
+        }
+<span class="fc bfc" id="L44" title="All 2 branches covered.">        if (interfaces.size() &gt;= MAX_INTERFACES) {</span>
+<span class="fc" id="L45">            throw new IllegalStateException(</span>
+<span class="fc" id="L46">                &quot;Router already has the maximum of &quot; + MAX_INTERFACES + &quot; interfaces&quot;);</span>
+        }
+<span class="fc" id="L48">        interfaces.add(networkInterface);</span>
+<span class="fc" id="L49">    }</span>
+
+    /**
+     * Returns an unmodifiable view of all network interfaces on this router.
+     *
+     * @return unmodifiable list of NetworkInterface
+     */
+    public List&lt;NetworkInterface&gt; getInterfaces() {
+<span class="fc" id="L57">        return Collections.unmodifiableList(interfaces);</span>
+    }
+
+    /**
+     * Receives a packet. Routing logic is handled by the SimulationEngine.
+     * This method stores state changes only — subclasses or the engine
+     * will handle forwarding.
+     *
+     * @param packet the incoming packet; must not be null
+     * @throws IllegalArgumentException if packet is null
+     */
+    @Override
+    public void receivePacket(Packet packet) {
+<span class="fc bfc" id="L70" title="All 2 branches covered.">        if (packet == null) {</span>
+<span class="fc" id="L71">            throw new IllegalArgumentException(&quot;Packet must not be null&quot;);</span>
+        }
+        // Forwarding logic is handled by SimulationEngine
+<span class="fc" id="L74">    }</span>
+
+    /**
+     * Resets this router by clearing all additional interfaces,
+     * retaining only the base interface from the parent Device.
+     */
+    @Override
+    public void reset() {
+<span class="fc" id="L82">        interfaces.clear();</span>
+<span class="fc" id="L83">        interfaces.add(getNetworkInterface());</span>
+<span class="fc" id="L84">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
