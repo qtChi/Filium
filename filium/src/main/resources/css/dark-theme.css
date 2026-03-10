@@ -1,16 +1,150 @@
-/* Filium Dark Theme */
-:root {
-  -fx-bg-primary: #1A1A2E;
-  -fx-bg-secondary: #16213E;
-  -fx-bg-elevated: #0F3460;
-  -fx-accent: #E94560;
-  -fx-text-primary: #EAEAEA;
-  -fx-text-secondary: #A0A0B0;
-  -fx-border: #2E2E4E;
-  -fx-packet-color: #00D4FF;
+/* ══════════════════════════════════════════════════════════════
+   Filium — Dark Theme
+   ══════════════════════════════════════════════════════════════ */
+
+   .root {
+    -fx-background-color: #16213E;
+    -fx-font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    -fx-font-size: 12px;
 }
 
-.root {
-  -fx-background-color: #1A1A2E;
-  -fx-font-family: "SF Pro Display", "Segoe UI", Arial, sans-serif;
+/* ── Scroll panes ─────────────────────────────────────────────── */
+.scroll-pane,
+.scroll-pane > .viewport {
+    -fx-background-color: #16213E;
+}
+
+.scroll-bar {
+    -fx-background-color: #1A1A2E;
+}
+
+.scroll-bar .thumb {
+    -fx-background-color: #2E2E4E;
+    -fx-background-radius: 4;
+}
+
+.scroll-bar .thumb:hover {
+    -fx-background-color: #00D4FF;
+}
+
+/* ── Toolbar ──────────────────────────────────────────────────── */
+.tool-bar {
+    -fx-background-color: #1A1A2E;
+    -fx-border-color: #2E2E4E;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 6 10 6 10;
+}
+
+.tool-bar .separator {
+    -fx-background-color: #2E2E4E;
+}
+
+/* ── Buttons ──────────────────────────────────────────────────── */
+.button {
+    -fx-background-color: #0F3460;
+    -fx-text-fill: #EAEAEA;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-cursor: hand;
+    -fx-padding: 5 14 5 14;
+}
+
+.button:hover {
+    -fx-background-color: #1a4a7a;
+}
+
+.button:pressed {
+    -fx-background-color: #0a2040;
+}
+
+.button:disabled {
+    -fx-opacity: 0.45;
+}
+
+/* ── Labels ───────────────────────────────────────────────────── */
+.label {
+    -fx-text-fill: #CCCCDD;
+}
+
+/* ── Text fields ──────────────────────────────────────────────── */
+.text-field {
+    -fx-background-color: #0F1535;
+    -fx-text-fill: #EAEAEA;
+    -fx-prompt-text-fill: #555577;
+    -fx-border-color: #2E2E4E;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-padding: 4 8 4 8;
+}
+
+.text-field:focused {
+    -fx-border-color: #00D4FF;
+}
+
+/* ── List view ────────────────────────────────────────────────── */
+.list-view {
+    -fx-background-color: #0D0D1F;
+    -fx-border-color: transparent;
+    -fx-control-inner-background: #0D0D1F;
+}
+
+.list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #AAAACC;
+    -fx-font-family: "Courier New", monospace;
+    -fx-font-size: 11px;
+    -fx-padding: 2 8 2 8;
+}
+
+.list-cell:filled:selected {
+    -fx-background-color: #1E2E50;
+    -fx-text-fill: #EAEAEA;
+}
+
+.list-cell:filled:hover {
+    -fx-background-color: #16213E;
+}
+
+/* ── Dialog pane ──────────────────────────────────────────────── */
+.dialog-pane {
+    -fx-background-color: #1A1A2E;
+}
+
+.dialog-pane .header-panel {
+    -fx-background-color: #12122A;
+}
+
+.dialog-pane .header-panel .label {
+    -fx-text-fill: #EAEAEA;
+    -fx-font-size: 13px;
+}
+
+.dialog-pane .button-bar .button {
+    -fx-background-color: #0F3460;
+    -fx-text-fill: #EAEAEA;
+}
+
+.dialog-pane .button-bar .button:hover {
+    -fx-background-color: #1a4a7a;
+}
+
+/* ── Separator ────────────────────────────────────────────────── */
+.separator .line {
+    -fx-border-color: #2E2E4E;
+    -fx-border-width: 0 0 1 0;
+}
+
+/* ── Tooltip ──────────────────────────────────────────────────── */
+.tooltip {
+    -fx-background-color: #0F1535;
+    -fx-text-fill: #CCCCDD;
+    -fx-border-color: #2E2E4E;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-font-size: 11px;
+}
+
+/* ── Scroll pane focus ring (suppress) ───────────────────────── */
+.scroll-pane:focused {
+    -fx-border-color: transparent;
 }
