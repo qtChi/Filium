@@ -116,7 +116,7 @@ No additional install needed. JavaFX is pulled in automatically by Maven.
 
 ```bash
 # Clone
-git clone https://github.com/yourname/filium.git
+git clone https://github.com/qtChi/filium.git
 cd filium
 
 # Run
